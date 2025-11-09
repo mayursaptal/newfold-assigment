@@ -255,23 +255,85 @@ Copy `.env.example` to `.env` and configure:
 cp .env.example .env
 ```
 
-Required variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `GEMINI_API_KEY` - Google Gemini API key
-- `SECRET_KEY` - JWT secret key
+### Environment Variables
+
+The following environment variables can be set in a `.env` file or as system environment variables:
+
+- `DATABASE_URL` - PostgreSQL connection URL
+- `POSTGRES_*` - Individual PostgreSQL connection parameters
 - `DEBUG` - Debug mode (True/False)
 - `LOG_LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `SECRET_KEY` - Secret key for JWT token signing
+- `API_V1_PREFIX` - API version 1 URL prefix
+- `GEMINI_API_KEY` - Google Gemini API key (required for AI features)
+- `GEMINI_MODEL` - Gemini model name to use
+- `HOST` - Server host address
+- `PORT` - Server port number
+
+### Secret Management
+
+**⚠️ IMPORTANT: Security Best Practices**
+
+- `.env.example` contains **placeholder values only** - never commit actual secrets
+- In production, inject secrets via:
+  - Docker environment variables: `docker run -e SECRET_KEY=...`
+  - Kubernetes secrets
+  - CI/CD secret management (GitHub Secrets, GitLab CI variables, etc.)
+  - Cloud provider secret managers (AWS Secrets Manager, Azure Key Vault, etc.)
+
+**Local Development:**
+1. Copy `.env.example` to `.env`
+2. Replace placeholder values with your actual secrets
+3. Ensure `.env` is in `.gitignore` (already configured)
+
+**Production:**
+- Never use `.env` files in production
+- Always inject secrets via environment variables or secret management systems
 
 ## Development
 
-### Run Locally
+### Setup
 
 ```bash
 # Install dependencies
 pip install -e ".[dev]"
 
+# Set up pre-commit hooks (recommended)
+pre-commit install
+
 # Run application
 uvicorn app.main:app --reload
+```
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. Hooks run automatically on commit and check:
+- Code formatting (black)
+- Linting (ruff)
+- Type checking (mypy)
+
+**Install hooks:**
+```bash
+pre-commit install
+```
+
+**Run hooks manually:**
+```bash
+pre-commit run --all-files
+```
+
+**Skip hooks (not recommended):**
+```bash
+git commit --no-verify
+```
+
+### Type Checking
+
+Type checking is enforced via mypy. CI will fail on type errors.
+
+**Run type checking locally:**
+```bash
+mypy . --config-file mypy.ini
 ```
 
 ### Run Tests
@@ -285,6 +347,24 @@ pytest --cov=. --cov-report=html
 
 # Run specific test file
 pytest tests/test_films.py
+```
+
+### Code Quality
+
+**Format code:**
+```bash
+black .
+```
+
+**Lint code:**
+```bash
+ruff check .
+ruff check . --fix  # Auto-fix issues
+```
+
+**Type check:**
+```bash
+mypy . --config-file mypy.ini
 ```
 
 ### Container Management
