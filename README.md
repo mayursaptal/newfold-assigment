@@ -247,6 +247,35 @@ curl -X POST "http://localhost:8000/api/v1/ai/summary" \
   }'
 ```
 
+**Handoff orchestration (agent routing)**
+```bash
+# SearchAgent chosen (film question)
+curl -X POST "http://localhost:8000/api/v1/ai/handoff" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What is the rental rate for the film Alien?"
+  }'
+
+# Response:
+# {
+#   "agent": "SearchAgent",
+#   "answer": "Alien (Horror) rents for $2.99."
+# }
+
+# LLMAgent chosen (general question)
+curl -X POST "http://localhost:8000/api/v1/ai/handoff" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Who won the FIFA World Cup in 2022?"
+  }'
+
+# Response:
+# {
+#   "agent": "LLMAgent",
+#   "answer": "Argentina won the 2022 FIFA World Cup after defeating France."
+# }
+```
+
 ## Environment Configuration
 
 Copy `.env.example` to `.env` and configure:

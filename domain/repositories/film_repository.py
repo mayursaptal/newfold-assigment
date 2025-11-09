@@ -312,4 +312,47 @@ class FilmRepository:
         )
         await self.session.commit()
         return result.rowcount > 0
+    
+    async def search_by_title_with_category(self, title: str) -> Optional[dict]:
+        """
+        Search for a film by title and return film with category information.
+        
+        Args:
+            title: Film title to search for (case-insensitive partial match)
+            
+        Returns:
+            Dictionary with film info and category, or None if not found
+            Format: {
+                "title": str,
+                "category": str,
+                "rental_rate": float,
+                "rating": str (optional, MPAA rating)
+            }
+        """
+        # Search for film by title (case-insensitive, partial match) and get category
+        sql_query = text("""
+            SELECT 
+                film.title,
+                film.rental_rate,
+                film.rating,
+                category.name as category
+            FROM film
+            LEFT JOIN film_category ON film.film_id = film_category.film_id
+            LEFT JOIN category ON film_category.category_id = category.category_id
+            WHERE LOWER(film.title) LIKE LOWER(:title_pattern)
+            LIMIT 1
+        """)
+        result = await self.session.execute(
+            sql_query,
+            {"title_pattern": f"%{title}%"}
+        )
+        row = result.fetchone()
+        if row:
+            return {
+                "title": row.title,
+                "category": row.category or "Unknown",
+                "rental_rate": float(row.rental_rate),
+                "rating": str(row.rating) if row.rating else None
+            }
+        return None
 

@@ -14,6 +14,16 @@ Example:
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Explicitly load .env file from current directory or /app (for Docker)
+# Use override=True to ensure environment variables take precedence
+env_paths = [Path(".env"), Path("/app/.env")]
+for env_path in env_paths:
+    if env_path.exists():
+        load_dotenv(env_path, override=True)
+        break
 
 
 class Settings(BaseSettings):
@@ -34,8 +44,9 @@ class Settings(BaseSettings):
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         secret_key: Secret key for JWT token signing
         api_v1_prefix: API version 1 URL prefix
-        gemini_api_key: Google Gemini API key
-        gemini_model: Gemini model name to use
+        openai_api_key: OpenAI API key
+        openai_model: OpenAI model name (e.g., gpt-4, gpt-3.5-turbo)
+        openai_org_id: OpenAI organization ID (optional)
         host: Server host address
         port: Server port number
     """
@@ -55,9 +66,10 @@ class Settings(BaseSettings):
     secret_key: str
     api_v1_prefix: str
 
-    # AI Configuration (Gemini)
-    gemini_api_key: str
-    gemini_model: str
+    # AI Configuration (OpenAI)
+    openai_api_key: Optional[str] = None
+    openai_model: str = "gpt-4"
+    openai_org_id: Optional[str] = None
 
     # Server Configuration
     host: str

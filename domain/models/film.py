@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from enum import Enum
+from sqlalchemy import Column, Enum as SQLEnum, TypeDecorator
 
 
 class FilmRating(str, Enum):
@@ -41,6 +42,43 @@ class FilmRating(str, Enum):
     PG13 = "PG-13"
     R = "R"
     NC17 = "NC-17"
+
+
+class FilmRatingType(TypeDecorator):
+    """Custom type decorator to handle FilmRating enum with database values.
+    
+    This decorator ensures that SQLAlchemy uses enum values (e.g., "NC-17")
+    instead of enum names (e.g., "NC17") when mapping to/from the database.
+    """
+    impl = SQLEnum
+    cache_ok = True
+    
+    def __init__(self):
+        super().__init__(
+            FilmRating,
+            values_callable=lambda x: [e.value for e in FilmRating],
+            name='mpaa_rating',
+            create_constraint=False
+        )
+    
+    def process_bind_param(self, value, dialect):
+        """Convert enum to database value."""
+        if value is None:
+            return None
+        if isinstance(value, FilmRating):
+            return value.value
+        return value
+    
+    def process_result_value(self, value, dialect):
+        """Convert database value to enum."""
+        if value is None:
+            return None
+        # Find enum member by value
+        for rating in FilmRating:
+            if rating.value == value:
+                return rating
+        # Fallback: try to create from value directly
+        return FilmRating(value) if value in [r.value for r in FilmRating] else None
 
 
 class FilmBase(SQLModel):
@@ -69,7 +107,10 @@ class FilmBase(SQLModel):
     rental_rate: float = Field(default=4.99)
     length: Optional[int] = None
     replacement_cost: float = Field(default=19.99)
-    rating: Optional[FilmRating] = None
+    rating: Optional[FilmRating] = Field(
+        default=None,
+        sa_column=Column(FilmRatingType())
+    )
     streaming_available: bool = Field(default=False)  # Boolean column with default FALSE
 
 

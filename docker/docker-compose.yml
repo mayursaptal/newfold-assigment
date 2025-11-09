@@ -41,6 +41,14 @@ services:
       API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
       HOST: ${HOST:-0.0.0.0}
       PORT: ${PORT:-8000}
+      # OpenAI Configuration
+      # SECRETS - These should be injected via environment variables in production
+      # Never commit actual secrets to version control
+      # OpenAI Configuration
+      # These will be loaded from .env file or can be overridden via environment variables
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
+      OPENAI_ORG_ID: ${OPENAI_ORG_ID:-}
       # SECRETS - These should be injected via environment variables in production
       # Never commit actual secrets to version control
       # Example: docker-compose run -e SECRET_KEY=actual-secret fastapi

@@ -1,7 +1,7 @@
-"""AI service for Gemini operations.
+"""AI service for Azure OpenAI operations.
 
 This module provides the AIService class which handles AI operations using
-Google's Gemini API via the Semantic Kernel. It provides methods for
+Azure OpenAI via the Semantic Kernel. It provides methods for
 streaming chat completions and generating structured film summaries.
 
 Example:
@@ -13,7 +13,7 @@ Example:
     async for chunk in service.stream_chat("Hello"):
         print(chunk)
     
-    summary = await service.get_film_summary(film_id=1)
+    summary = await service.get_film_summary(film_id=1, film_service=film_service)
     ```
 """
 
@@ -22,35 +22,33 @@ from pathlib import Path
 from semantic_kernel import Kernel
 from semantic_kernel.functions import KernelArguments
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
-import google.generativeai as genai
 from domain.services.film_service import FilmService
 from core.logging import get_logger
-from core.settings import settings
 
 
 class AIService:
-    """Service for AI operations using Gemini.
+    """Service for AI operations using OpenAI.
     
-    This class provides AI functionality using Google's Gemini API through
+    This class provides AI functionality using OpenAI through
     the Semantic Kernel framework. It handles streaming chat responses
     and structured JSON generation for film summaries.
     
     Attributes:
-        kernel: Semantic Kernel instance configured with Gemini API
+        kernel: Semantic Kernel instance configured with OpenAI
     """
     
     def __init__(self, kernel: Kernel):
         """Initialize service with Semantic Kernel.
         
         Args:
-            kernel: Semantic Kernel instance configured with Gemini API
+            kernel: Semantic Kernel instance configured with OpenAI
         """
         self.kernel = kernel
         self.logger = get_logger("ai")  # Automatically creates logs/ai/YYYY-MM-DD.log
     
     async def stream_chat(self, question: str):
         """
-        Stream chat completion response using Google Generative AI.
+        Stream chat completion response using OpenAI.
         
         Args:
             question: User question
@@ -58,37 +56,79 @@ class AIService:
         Yields:
             Text chunks as they are generated
         """
-        self.logger.info("AI chat request received", question=question[:100])  # Log first 100 chars
+        self.logger.info("AI chat request received", question=question[:100])
         
         try:
-            # Check if Gemini is configured
-            if not hasattr(self.kernel, '_gemini_configured') or not self.kernel._gemini_configured:
-                self.logger.error("AI chat service not available", reason="Gemini not configured")
-                yield "Error: No AI chat service available. Please check your Gemini API key configuration."
-                return
+            # Create a simple prompt function for chat
+            prompt_template = "{{$question}}"
             
-            # Get model name and API key
-            model_name = getattr(self.kernel, '_gemini_model', settings.gemini_model)
-            api_key = getattr(self.kernel, '_gemini_api_key', settings.gemini_api_key)
+            # Check if function already exists, otherwise add it
+            try:
+                chat_function = self.kernel.get_function_from_fully_qualified_function_name("Chat", "stream_chat")
+            except:
+                chat_function = self.kernel.add_function(
+                    function_name="stream_chat",
+                    plugin_name="Chat",
+                    prompt=prompt_template,
+                    description="Answer user questions"
+                )
             
-            # Configure if not already done
-            genai.configure(api_key=api_key)
+            # Invoke with streaming
+            arguments = KernelArguments(question=question)
             
-            # Get the model
-            model = genai.GenerativeModel(model_name)
-            
-            # Generate content with streaming
-            response = await model.generate_content_async(
-                question,
-                stream=True
-            )
-            
-            # Stream the response chunks
             response_text = ""
-            async for chunk in response:
-                if chunk.text:
-                    response_text += chunk.text
-                    yield chunk.text
+            async for chunk in self.kernel.invoke_stream(
+                function=chat_function,
+                arguments=arguments
+            ):
+                # Handle different chunk types from Semantic Kernel
+                chunk_text = None
+                
+                # Chunks can be lists - iterate through them
+                if isinstance(chunk, list):
+                    for item in chunk:
+                        # StreamingChatMessageContent objects - try content first, then str()
+                        if hasattr(item, 'content') and item.content:
+                            chunk_text = str(item.content)
+                            break
+                        elif hasattr(item, 'text') and item.text:
+                            chunk_text = str(item.text)
+                            break
+                        elif hasattr(item, 'value') and item.value:
+                            chunk_text = str(item.value)
+                            break
+                        elif isinstance(item, str):
+                            chunk_text = item
+                            break
+                        else:
+                            # Fallback: convert the object to string, but skip if empty
+                            temp_text = str(item) if item else None
+                            if temp_text and temp_text.strip():
+                                chunk_text = temp_text
+                                break
+                # Try different attributes that might contain the text
+                elif hasattr(chunk, 'content') and chunk.content:
+                    chunk_text = str(chunk.content)
+                elif hasattr(chunk, 'value') and chunk.value:
+                    chunk_text = str(chunk.value)
+                elif hasattr(chunk, 'text') and chunk.text:
+                    chunk_text = str(chunk.text)
+                elif hasattr(chunk, 'choices') and chunk.choices:
+                    # Handle OpenAI-style choices
+                    for choice in chunk.choices:
+                        if hasattr(choice, 'delta') and hasattr(choice.delta, 'content'):
+                            chunk_text = str(choice.delta.content) if choice.delta.content else None
+                        elif hasattr(choice, 'text'):
+                            chunk_text = str(choice.text)
+                        if chunk_text:
+                            break
+                elif isinstance(chunk, str):
+                    chunk_text = chunk
+                
+                # Yield the chunk if we found text
+                if chunk_text:
+                    response_text += chunk_text
+                    yield chunk_text
             
             # Log successful completion
             self.logger.info("AI chat response completed", 
@@ -99,31 +139,7 @@ class AIService:
                             question=question[:100], 
                             error=str(e), 
                             error_type=type(e).__name__)
-            # Fallback: try non-streaming
-            try:
-                model_name = getattr(self.kernel, '_gemini_model', settings.gemini_model)
-                api_key = getattr(self.kernel, '_gemini_api_key', settings.gemini_api_key)
-                
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel(model_name)
-                
-                response = await model.generate_content_async(question)
-                
-                if response.text:
-                    self.logger.info("AI chat fallback response completed", 
-                                   question=question[:100],
-                                   response_length=len(response.text))
-                    yield response.text
-                else:
-                    self.logger.error("AI chat fallback failed - no response", 
-                                    question=question[:100])
-                    yield f"I'm sorry, I couldn't generate a response. Error: {str(e)}"
-            except Exception as e2:
-                self.logger.error("AI chat fallback exception", 
-                                question=question[:100],
-                                error=str(e2),
-                                error_type=type(e2).__name__)
-                yield f"Error: {str(e2)}"
+            yield f"I'm sorry, I encountered an error: {str(e)}"
     
     async def get_film_summary(self, film_id: int, film_service: FilmService) -> dict:
         """
@@ -153,107 +169,186 @@ Rating: {film.rating or 'N/A'}
 Release Year: {film.release_year or 'N/A'}"""
 
         try:
-            # Load prompt template from file
+            # Load prompt function from config.json directory
+            # Use absolute path to avoid issues in Docker
             prompt_dir = Path("core/prompts/summary")
+            if not prompt_dir.exists():
+                prompt_dir = Path("/app/core/prompts/summary")
+            
+            config_file = prompt_dir / "config.json"
             prompt_file = prompt_dir / "summarize_tool.skprompt"
             
-            # Read prompt template from file
-            if prompt_file.exists():
-                with open(prompt_file, "r", encoding="utf-8") as f:
-                    prompt_template = f.read()
-            else:
-                # Fallback to inline template
-                prompt_template = """
-Analyze the following film and provide a summary in JSON format with exactly these keys: title, rating, recommended (boolean).
-
-Film details:
-{{$film_text}}
-
-IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON.
-The JSON must have exactly these keys: "title", "rating", "recommended" (boolean).
-
-Respond in this exact format:
-{"title": "...", "rating": "...", "recommended": true/false}
-"""
+            # Load config.json for execution settings
+            with open(config_file, "r", encoding="utf-8") as f:
+                config = json.load(f)
             
-            # Create kernel function from prompt template
-            # Check if function already exists, otherwise add it
+            # Load prompt template from .skprompt file
+            with open(prompt_file, "r", encoding="utf-8") as f:
+                prompt_template = f.read()
+            
+            # Always reload the function to ensure latest prompt is used
+            # Remove existing function if it exists
             try:
-                summarize_function = self.kernel.get_function_from_fully_qualified_function_name("FilmSummary", "summarize_tool")
+                existing_plugin = self.kernel.get_plugin("FilmSummary")
+                if existing_plugin:
+                    # Remove the plugin to force reload
+                    del self.kernel.plugins["FilmSummary"]
             except:
-                summarize_function = self.kernel.add_function(
-                    function_name="summarize_tool",
-                    plugin_name="FilmSummary",
-                    prompt=prompt_template,
-                    description="Generate a structured JSON summary for a film"
-                )
+                pass
             
-            # Create execution settings with JSON response format
-            # Note: Since we're using Gemini, we'll adapt the execution settings
-            # For Gemini, we use the direct SDK but maintain SK structure
+            # Create the function with latest prompt
+            summarize_function = self.kernel.add_function(
+                function_name="summarize_tool",
+                plugin_name="FilmSummary",
+                prompt=prompt_template,
+                description=config.get("description", "Generate a structured JSON summary for a film")
+            )
+            
+            # Create execution settings from config.json
+            completion_config = config.get("completion", {})
+            # Create settings without response_format to avoid encoding issues
             execution_settings = OpenAIChatPromptExecutionSettings(
-                response_format={"type": "json_object"},
-                temperature=0.3,
-                max_tokens=200
+                temperature=completion_config.get("temperature", 0.3),
+                max_tokens=completion_config.get("max_tokens", 200),
+                top_p=completion_config.get("top_p", 1.0),
+                presence_penalty=completion_config.get("presence_penalty", 0.0),
+                frequency_penalty=completion_config.get("frequency_penalty", 0.0)
             )
             
             # Invoke the function with film_text as input
             arguments = KernelArguments(film_text=film_text)
             
-            # Since Gemini doesn't have native SK support, we'll use a hybrid approach
-            # Try to invoke, but fallback to direct Gemini API if needed
-            try:
-                response = await self.kernel.invoke(
-                    function=summarize_function,
-                    arguments=arguments,
-                    execution_settings=execution_settings
-                )
-                # Get response content
-                response_text = str(response.value) if hasattr(response, 'value') else str(response)
-            except Exception as sk_error:
-                # Fallback: Use Gemini directly with the prompt template
-                self.logger.warning("Semantic Kernel invoke failed, using Gemini directly", error=str(sk_error))
-                
-                # Replace template variable
-                final_prompt = prompt_template.replace("{{$film_text}}", film_text)
-                
-                # Configure Gemini
-                model_name = getattr(self.kernel, '_gemini_model', settings.gemini_model)
-                api_key = getattr(self.kernel, '_gemini_api_key', settings.gemini_api_key)
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel(model_name)
-                
-                # Generate with JSON instruction
-                json_prompt = f"""{final_prompt}
-
-IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON."""
-                response_obj = await model.generate_content_async(json_prompt)
-                response_text = response_obj.text if hasattr(response_obj, 'text') else str(response_obj)
+            # Invoke without execution_settings to avoid encoding issues
+            # The config.json settings will be applied via the function's default settings
+            response = await self.kernel.invoke(
+                function=summarize_function,
+                arguments=arguments
+            )
+            
+            # Get response content
+            # Handle different response types from Semantic Kernel
+            if hasattr(response, 'value'):
+                response_value = response.value
+                # If it's a ChatMessageContent or similar, extract the actual content
+                if hasattr(response_value, 'content') and response_value.content:
+                    response_text = str(response_value.content)
+                elif hasattr(response_value, 'inner_content'):
+                    # Try to extract from inner_content (OpenAI ChatCompletion)
+                    inner = response_value.inner_content
+                    if hasattr(inner, 'choices') and inner.choices:
+                        # Get content from first choice
+                        choice = inner.choices[0]
+                        if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                            response_text = str(choice.message.content)
+                        elif hasattr(choice, 'text'):
+                            response_text = str(choice.text)
+                        else:
+                            response_text = str(response_value)
+                    else:
+                        response_text = str(response_value)
+                elif hasattr(response_value, 'text'):
+                    response_text = str(response_value.text)
+                else:
+                    response_text = str(response_value)
+            else:
+                response_text = str(response)
+            
+            # Log raw response for debugging
+            self.logger.info("AI raw response", raw_response_text=response_text[:500])
             
             # Clean up response text if needed
             response_text = response_text.strip()
+            
+            # Remove markdown code blocks if present
             if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
+                response_text = response_text[7:].strip()
+            elif response_text.startswith("```"):
+                response_text = response_text[3:].strip()
+            
             if response_text.endswith("```"):
-                response_text = response_text[:-3]
+                response_text = response_text[:-3].strip()
+            
+            # Try to extract JSON from the response if it's embedded in text
+            # Look for JSON object pattern
+            import re
+            json_match = re.search(r'\{[^{}]*"title"[^{}]*\}', response_text, re.DOTALL)
+            if json_match:
+                response_text = json_match.group(0)
+            
+            # If still no valid JSON, try to find the first { and last }
+            if not response_text.startswith('{'):
+                start_idx = response_text.find('{')
+                if start_idx != -1:
+                    response_text = response_text[start_idx:]
+            
+            if not response_text.endswith('}'):
+                end_idx = response_text.rfind('}')
+                if end_idx != -1:
+                    response_text = response_text[:end_idx + 1]
+            
             response_text = response_text.strip()
             
-            # Parse JSON
-            summary = json.loads(response_text)
+            # Parse JSON with better error handling
+            try:
+                summary = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                self.logger.error("Failed to parse AI response as JSON",
+                                raw_response=response_text[:500],
+                                error=str(e),
+                                error_position=f"line {e.lineno}, column {e.colno}")
+                # Try to fix common JSON issues
+                # Remove any trailing commas
+                response_text = re.sub(r',\s*}', '}', response_text)
+                response_text = re.sub(r',\s*]', ']', response_text)
+                try:
+                    summary = json.loads(response_text)
+                except json.JSONDecodeError:
+                    # If still fails, raise the original error
+                    raise ValueError(f"AI response is not valid JSON: {response_text[:200]}")
+            
+            # Log the parsed AI response for debugging
+            self.logger.info("AI summary response", 
+                            parsed_response=summary,
+                            recommended_value=summary.get("recommended"),
+                            recommended_type=type(summary.get("recommended")).__name__)
             
             # Validate and return
+            # Always use the actual film rating value (enum value) for consistency
+            # The film.rating is a FilmRating enum, so use its .value attribute
+            if film.rating:
+                rating_value = film.rating.value  # This will be "NC-17", "PG-13", etc.
+            else:
+                # Fallback to AI response if film has no rating
+                rating_value = summary.get("rating", "N/A")
+                # If AI returned an enum string representation, try to extract the value
+                if isinstance(rating_value, str) and rating_value.startswith("FilmRating."):
+                    enum_name = rating_value.split(".", 1)[1]
+                    try:
+                        from domain.models.film import FilmRating
+                        rating_enum = getattr(FilmRating, enum_name, None)
+                        if rating_enum:
+                            rating_value = rating_enum.value
+                    except:
+                        pass
+            
+            # Parse recommended field - handle both boolean and string values
+            recommended = summary.get("recommended", False)
+            if isinstance(recommended, str):
+                recommended = recommended.lower() in ("true", "1", "yes", "recommended")
+            elif not isinstance(recommended, bool):
+                recommended = bool(recommended)
+            
             result = {
                 "title": summary.get("title", film.title),
-                "rating": summary.get("rating", str(film.rating) if film.rating else "N/A"),
-                "recommended": bool(summary.get("recommended", False))
+                "rating": rating_value,
+                "recommended": recommended
             }
             
             self.logger.info("AI film summary completed", 
                            film_id=film_id,
                            film_title=film.title,
                            recommended=result["recommended"])
+            
             return result
         except Exception as e:
             # Fallback response if AI fails
@@ -262,9 +357,10 @@ IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, j
                             film_title=film.title,
                             error=str(e),
                             error_type=type(e).__name__)
+            # Use enum value instead of string representation
+            rating_value = film.rating.value if film.rating and hasattr(film.rating, 'value') else "N/A"
             return {
                 "title": film.title,
-                "rating": str(film.rating) if film.rating else "N/A",
+                "rating": rating_value,
                 "recommended": False
             }
-

@@ -8,7 +8,7 @@ Exports:
     FilmService - Film business logic
     RentalService - Rental business logic
     CategoryService - Category business logic
-    AIService - AI operations using Gemini
+    AIService - AI operations using Azure OpenAI
 """
 
 from domain.services.film_service import FilmService

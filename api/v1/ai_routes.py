@@ -1,7 +1,7 @@
-"""AI API routes using Gemini.
+"""AI API routes using Azure OpenAI.
 
-This module defines FastAPI routes for AI-powered endpoints using Google's
-Gemini API. It provides endpoints for chat completions and film summaries.
+This module defines FastAPI routes for AI-powered endpoints using Azure OpenAI.
+It provides endpoints for chat completions and film summaries.
 
 Endpoints:
     GET /api/v1/ai/ask?question=... - Ask a question and get streaming response
@@ -22,9 +22,14 @@ Example:
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from domain.services import AIService, FilmService
 from domain.schemas import FilmSummaryRequest, FilmSummaryResponse
-from core.dependencies import get_ai_service, get_film_service
+from core.dependencies import get_ai_service, get_film_service, get_db_session, get_ai_kernel
+from app.agents import HandoffOrchestration, SearchAgent, LLMAgent
+from domain.repositories import FilmRepository
+from semantic_kernel import Kernel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -76,3 +81,61 @@ async def get_film_summary(
     """
     summary = await ai_service.get_film_summary(request.film_id, film_service)
     return FilmSummaryResponse(**summary)
+
+
+class HandoffRequest(BaseModel):
+    """Request model for handoff endpoint.
+    
+    Attributes:
+        question: User's question to be answered
+    """
+    question: str
+
+
+class HandoffResponse(BaseModel):
+    """Response model for handoff endpoint.
+    
+    Attributes:
+        agent: Name of the agent that handled the question (SearchAgent or LLMAgent)
+        answer: Answer text from the agent
+    """
+    agent: str
+    answer: str
+
+
+@router.post("/handoff", response_model=HandoffResponse)
+async def handoff_question(
+    request: HandoffRequest,
+    session: AsyncSession = Depends(get_db_session),
+    kernel: Kernel = Depends(get_ai_kernel),
+):
+    """
+    Route question to appropriate agent using handoff orchestration.
+    
+    Uses HandoffOrchestration to route questions:
+    - Questions containing "film" keyword → SearchAgent (searches database)
+    - Other questions → LLMAgent (uses Semantic Kernel)
+    
+    If SearchAgent finds no match, automatically hands off to LLMAgent.
+    
+    Args:
+        request: Handoff request with question
+        session: Database session (injected)
+        kernel: Semantic Kernel instance (injected)
+        
+    Returns:
+        Response with agent name and answer
+    """
+    # Create agents
+    film_repository = FilmRepository(session)
+    search_agent = SearchAgent(film_repository, kernel=kernel)
+    llm_agent = LLMAgent(kernel)
+    
+    # Create orchestration with custom routing logic
+    # Uses OrchestrationHandoffs for configuration but custom process() method
+    orchestration = HandoffOrchestration(search_agent, llm_agent)
+    
+    # Process question using custom routing logic
+    result = await orchestration.process(request.question)
+    
+    return HandoffResponse(**result)

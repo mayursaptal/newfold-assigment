@@ -6,6 +6,21 @@ Film details:
 IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON.
 The JSON must have exactly these keys: "title", "rating", "recommended" (boolean).
 
+For the "recommended" field, evaluate the film objectively:
+- Set it to TRUE if the description suggests:
+  * An interesting or unique plot/concept
+  * Engaging characters or storylines
+  * Entertainment value or appeal
+  * Generally positive or neutral description
+  
+- Set it to FALSE if the description clearly indicates:
+  * Very generic or formulaic content
+  * Uninteresting or dull plot
+  * Poor quality indicators
+  * Negative or unappealing description
+
+Use a balanced approach: recommend films that seem reasonably interesting or entertaining, but don't recommend films that are clearly generic, boring, or unappealing based on the description.
+
 Respond in this exact format:
 {"title": "...", "rating": "...", "recommended": true/false}
 
