@@ -2,9 +2,7 @@
 
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
-from semantic_kernel.core_plugins import TextMemoryPlugin
-from semantic_kernel.memory import MemoryStoreBase
-from typing import Optional
+from typing import Optional, Any
 from core.settings import settings
 from core.logging import get_logger
 
@@ -15,7 +13,7 @@ def create_kernel(
     api_key: Optional[str] = None,
     endpoint: Optional[str] = None,
     model: Optional[str] = None,
-    memory_store: Optional[MemoryStoreBase] = None,
+    memory_store: Optional[Any] = None,
 ) -> Kernel:
     """
     Create and configure a Semantic Kernel instance.
@@ -51,8 +49,13 @@ def create_kernel(
     kernel.add_service(service)
     
     # Add memory plugin if memory store is provided
+    # Note: MemoryStoreBase import may vary by Semantic Kernel version
     if memory_store:
-        kernel.add_plugin(TextMemoryPlugin(memory_store), "memory")
+        try:
+            from semantic_kernel.core_plugins import TextMemoryPlugin
+            kernel.add_plugin(TextMemoryPlugin(memory_store), "memory")
+        except ImportError:
+            logger.warning("TextMemoryPlugin not available in this Semantic Kernel version")
     
     logger.info("Semantic Kernel initialized", model=model, endpoint=endpoint)
     

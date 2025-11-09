@@ -20,7 +20,7 @@ class FilmBase(SQLModel):
     title: str = Field(index=True)
     description: Optional[str] = None
     release_year: Optional[int] = None
-    language_id: int = Field(foreign_key="language.id")
+    language_id: int  # Foreign key exists in DB, but not defined as FK in model to avoid SQLModel resolution issues
     rental_duration: int = Field(default=3)
     rental_rate: float = Field(default=4.99)
     length: Optional[int] = None
@@ -33,9 +33,11 @@ class Film(FilmBase, table=True):
     """Film entity."""
     __tablename__ = "film"
     
-    id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"name": "film_id"})
+    last_update: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"}
+    )
 
 
 class FilmCreate(FilmBase):
@@ -59,14 +61,14 @@ class FilmUpdate(SQLModel):
 class FilmRead(FilmBase):
     """Film read schema."""
     id: int
-    created_at: datetime
-    updated_at: datetime
+    last_update: datetime
 
 
 class RentalBase(SQLModel):
     """Base rental model."""
-    film_id: int = Field(foreign_key="film.id")
+    inventory_id: int  # Foreign key exists in DB, but not defined as FK in model to avoid SQLModel resolution issues
     customer_id: int
+    staff_id: int  # Foreign key exists in DB, but not defined as FK in model to avoid SQLModel resolution issues
     rental_date: datetime = Field(default_factory=datetime.utcnow)
     return_date: Optional[datetime] = None
 
@@ -75,14 +77,19 @@ class Rental(RentalBase, table=True):
     """Rental entity."""
     __tablename__ = "rental"
     
-    id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"name": "rental_id"})
+    last_update: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"}
+    )
 
 
-class RentalCreate(RentalBase):
+class RentalCreate(SQLModel):
     """Rental creation schema."""
-    pass
+    inventory_id: int
+    customer_id: int
+    staff_id: int
+    rental_date: Optional[datetime] = None  # Will default to now() if not provided
 
 
 class RentalUpdate(SQLModel):
@@ -90,9 +97,35 @@ class RentalUpdate(SQLModel):
     return_date: Optional[datetime] = None
 
 
-class RentalRead(RentalBase):
+class RentalRead(SQLModel):
     """Rental read schema."""
     id: int
-    created_at: datetime
-    updated_at: datetime
+    inventory_id: int
+    customer_id: int
+    staff_id: int
+    rental_date: datetime
+    return_date: Optional[datetime] = None
+    last_update: datetime
+
+
+class CategoryBase(SQLModel):
+    """Base category model."""
+    name: str = Field(index=True)
+
+
+class Category(CategoryBase, table=True):
+    """Category entity."""
+    __tablename__ = "category"
+    
+    id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"name": "category_id"})
+    last_update: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"}
+    )
+
+
+class CategoryRead(CategoryBase):
+    """Category read schema."""
+    id: int
+    last_update: datetime
 

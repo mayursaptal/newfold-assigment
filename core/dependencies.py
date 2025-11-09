@@ -6,8 +6,8 @@ from semantic_kernel import Kernel
 from core.db import get_async_session
 from core.ai_kernel import get_default_kernel
 from core.settings import settings, Settings
-from domain.repositories import FilmRepository, RentalRepository
-from domain.services import FilmService, RentalService, AIService
+from domain.repositories import FilmRepository, RentalRepository, CategoryRepository
+from domain.services import FilmService, RentalService, AIService, CategoryService
 
 
 # Database dependencies
@@ -59,6 +59,21 @@ def get_rental_repository(
     return RentalRepository(session)
 
 
+def get_category_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> CategoryRepository:
+    """
+    Get category repository instance.
+    
+    Args:
+        session: Database session
+        
+    Returns:
+        CategoryRepository instance
+    """
+    return CategoryRepository(session)
+
+
 # Service dependencies
 def get_film_service(
     repository: FilmRepository = Depends(get_film_repository),
@@ -88,6 +103,21 @@ def get_rental_service(
         RentalService instance
     """
     return RentalService(repository)
+
+
+def get_category_service(
+    repository: CategoryRepository = Depends(get_category_repository),
+) -> CategoryService:
+    """
+    Get category service instance.
+    
+    Args:
+        repository: Category repository
+        
+    Returns:
+        CategoryService instance
+    """
+    return CategoryService(repository)
 
 
 # AI Kernel dependency

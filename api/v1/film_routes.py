@@ -1,7 +1,7 @@
 """Film API routes."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from typing import List, Optional
 from domain.models import FilmCreate, FilmUpdate, FilmRead
 from domain.services import FilmService
 from core.dependencies import get_film_service
@@ -31,20 +31,22 @@ async def create_film(
 async def get_films(
     skip: int = 0,
     limit: int = 100,
+    category: Optional[str] = None,
     service: FilmService = Depends(get_film_service),
 ):
     """
-    Get all films with pagination.
+    Get all films with pagination and optional category filter.
     
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
+        category: Optional category name to filter by (?category=Action)
         service: Film service (injected)
         
     Returns:
         List of films
     """
-    return await service.get_films(skip=skip, limit=limit)
+    return await service.get_films(skip=skip, limit=limit, category=category)
 
 
 @router.get("/{film_id}", response_model=FilmRead)

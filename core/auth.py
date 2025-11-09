@@ -51,6 +51,33 @@ async def get_current_user(
         )
 
 
+async def verify_dvd_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
+    """
+    Verify Bearer token with 'dvd_' prefix requirement.
+    
+    Args:
+        credentials: HTTP bearer token credentials
+        
+    Returns:
+        Token information dictionary
+        
+    Raises:
+        HTTPException: If token is invalid or doesn't start with 'dvd_'
+    """
+    token = credentials.credentials
+    
+    if not token.startswith("dvd_"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token must start with 'dvd_' prefix",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    return {"token": token, "valid": True}
+
+
 def create_access_token(data: dict) -> str:
     """
     Create a JWT access token.
