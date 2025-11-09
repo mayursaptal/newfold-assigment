@@ -1,4 +1,21 @@
-"""Category API routes."""
+"""Category API routes.
+
+This module defines FastAPI routes for category-related endpoints. It provides
+read-only endpoints for retrieving film categories.
+
+Endpoints:
+    GET /api/v1/categories - Get all categories with pagination
+    GET /api/v1/categories/{category_id} - Get category by ID
+
+Example:
+    ```python
+    # Get all categories
+    GET /api/v1/categories?skip=0&limit=10
+    
+    # Get category by ID
+    GET /api/v1/categories/1
+    ```
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List

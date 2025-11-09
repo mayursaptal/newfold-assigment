@@ -1,4 +1,24 @@
-"""AI API routes using Gemini."""
+"""AI API routes using Gemini.
+
+This module defines FastAPI routes for AI-powered endpoints using Google's
+Gemini API. It provides endpoints for chat completions and film summaries.
+
+Endpoints:
+    GET /api/v1/ai/ask?question=... - Ask a question and get streaming response
+    POST /api/v1/ai/summary - Get AI-generated film summary with structured JSON
+
+Example:
+    ```python
+    # Ask a question
+    GET /api/v1/ai/ask?question=What is artificial intelligence?
+    
+    # Get film summary
+    POST /api/v1/ai/summary
+    {
+        "film_id": 1
+    }
+    ```
+"""
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse

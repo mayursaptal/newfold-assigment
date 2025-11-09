@@ -1,4 +1,20 @@
-"""Dependency injection functions for FastAPI."""
+"""Dependency injection functions for FastAPI.
+
+This module provides FastAPI dependency functions for dependency injection.
+It includes dependencies for database sessions, repositories, services,
+and AI kernel instances. These dependencies are automatically injected
+into route handlers using FastAPI's Depends() mechanism.
+
+Example:
+    ```python
+    from fastapi import Depends
+    from core.dependencies import get_film_service
+    
+    @router.get("/films")
+    async def get_films(service: FilmService = Depends(get_film_service)):
+        return await service.get_films()
+    ```
+"""
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession

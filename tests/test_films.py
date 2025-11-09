@@ -1,4 +1,16 @@
-"""Tests for film endpoints - one happy-path test per endpoint."""
+"""Tests for film endpoints - one happy-path test per endpoint.
+
+This module contains pytest tests for all film-related API endpoints.
+Each endpoint has exactly one happy-path test that verifies successful
+operation with valid input data.
+
+Test Coverage:
+    - POST /api/v1/films/ - Create film
+    - GET /api/v1/films/ - Get all films with pagination
+    - GET /api/v1/films/{film_id} - Get film by ID
+    - PUT /api/v1/films/{film_id} - Update film
+    - DELETE /api/v1/films/{film_id} - Delete film
+"""
 
 import pytest
 from httpx import AsyncClient

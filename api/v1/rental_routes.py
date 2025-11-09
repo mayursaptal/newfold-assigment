@@ -1,4 +1,26 @@
-"""Rental API routes."""
+"""Rental API routes.
+
+This module defines FastAPI routes for rental-related endpoints. It provides
+RESTful API endpoints for creating, reading, updating, and deleting rentals.
+
+Endpoints:
+    POST /api/v1/rentals/ - Create a new rental
+    GET /api/v1/rentals/ - Get all rentals with pagination
+    GET /api/v1/rentals/{rental_id} - Get rental by ID
+    PUT /api/v1/rentals/{rental_id} - Update a rental
+    DELETE /api/v1/rentals/{rental_id} - Delete a rental
+
+Example:
+    ```python
+    # Create a rental
+    POST /api/v1/rentals/
+    {
+        "inventory_id": 1,
+        "customer_id": 1,
+        "staff_id": 1
+    }
+    ```
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List

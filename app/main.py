@@ -1,4 +1,22 @@
-"""FastAPI application main entry point."""
+"""FastAPI application main entry point.
+
+This module creates and configures the FastAPI application instance,
+sets up middleware, registers routes, and handles application lifecycle
+events (startup and shutdown).
+
+The application uses:
+    - FastAPI for the web framework
+    - SQLModel for database ORM
+    - Semantic Kernel for AI operations
+    - PostgreSQL for the database
+    - Structured JSON logging
+
+Example:
+    Run the application:
+    ```bash
+    uvicorn app.main:app --reload
+    ```
+"""
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -56,7 +74,13 @@ app.include_router(v1_router, prefix=settings.api_v1_prefix)
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint.
+    
+    Returns basic API information and links to documentation.
+    
+    Returns:
+        dict: API information including message, version, and docs URL
+    """
     return {
         "message": "Interview API",
         "version": "0.1.0",
@@ -66,7 +90,13 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint.
+    
+    Used for monitoring and load balancer health checks.
+    
+    Returns:
+        dict: Health status information
+    """
     return {
         "status": "healthy",
         "service": "interview-api",

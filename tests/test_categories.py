@@ -1,4 +1,13 @@
-"""Tests for category endpoints - one happy-path test per endpoint."""
+"""Tests for category endpoints - one happy-path test per endpoint.
+
+This module contains pytest tests for all category-related API endpoints.
+Each endpoint has exactly one happy-path test that verifies successful
+operation with valid input data.
+
+Test Coverage:
+    - GET /api/v1/categories - Get all categories with pagination
+    - GET /api/v1/categories/{category_id} - Get category by ID
+"""
 
 import pytest
 from httpx import AsyncClient

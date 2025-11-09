@@ -1,4 +1,21 @@
-"""AI service."""
+"""AI service for Gemini operations.
+
+This module provides the AIService class which handles AI operations using
+Google's Gemini API via the Semantic Kernel. It provides methods for
+streaming chat completions and generating structured film summaries.
+
+Example:
+    ```python
+    from domain.services import AIService
+    from semantic_kernel import Kernel
+    
+    service = AIService(kernel)
+    async for chunk in service.stream_chat("Hello"):
+        print(chunk)
+    
+    summary = await service.get_film_summary(film_id=1)
+    ```
+"""
 
 from semantic_kernel import Kernel
 from domain.repositories.film_repository import FilmRepository
@@ -6,14 +23,21 @@ from core.db import get_async_session
 
 
 class AIService:
-    """Service for AI operations using Gemini."""
+    """Service for AI operations using Gemini.
+    
+    This class provides AI functionality using Google's Gemini API through
+    the Semantic Kernel framework. It handles streaming chat responses
+    and structured JSON generation for film summaries.
+    
+    Attributes:
+        kernel: Semantic Kernel instance configured with Gemini API
+    """
     
     def __init__(self, kernel: Kernel):
-        """
-        Initialize service with Semantic Kernel.
+        """Initialize service with Semantic Kernel.
         
         Args:
-            kernel: Semantic Kernel instance
+            kernel: Semantic Kernel instance configured with Gemini API
         """
         self.kernel = kernel
     

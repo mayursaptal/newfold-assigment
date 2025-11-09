@@ -1,4 +1,24 @@
-"""Pytest configuration and fixtures."""
+"""Pytest configuration and fixtures.
+
+This module provides pytest fixtures for testing the FastAPI application.
+It sets up an in-memory SQLite database for testing and provides async
+HTTP client fixtures for making API requests.
+
+Fixtures:
+    db_session: Async database session with in-memory SQLite database
+    client: Async HTTP client for making API requests
+    sync_client: Synchronous HTTP client for making API requests
+
+Example:
+    ```python
+    import pytest
+    
+    @pytest.mark.asyncio
+    async def test_endpoint(client: AsyncClient):
+        response = await client.get("/api/v1/films/")
+        assert response.status_code == 200
+    ```
+"""
 
 import pytest
 from httpx import AsyncClient

@@ -1,4 +1,16 @@
-"""API v1 routes."""
+"""API v1 routes registration.
+
+This module registers all API v1 route modules into a single router.
+All routes are prefixed with their resource name and tagged for
+organization in the OpenAPI documentation.
+
+Routes:
+    - /films - Film CRUD operations
+    - /rentals - Rental CRUD operations
+    - /customers - Customer rental operations
+    - /categories - Category read operations
+    - /ai - AI-powered endpoints (chat, summaries)
+"""
 
 from fastapi import APIRouter
 from api.v1 import film_routes, rental_routes, ai_routes, customer_routes, category_routes

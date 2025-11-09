@@ -1,4 +1,21 @@
-"""Film repository."""
+"""Film repository for database operations.
+
+This module provides the FilmRepository class which implements the repository
+pattern for film data access. It handles all database operations for films
+including CRUD operations and complex queries with category filtering.
+
+The repository uses raw SQL queries for complex operations to work around
+SQLModel's foreign key resolution limitations with the Pagila schema.
+
+Example:
+    ```python
+    from domain.repositories import FilmRepository
+    
+    repository = FilmRepository(session)
+    film = await repository.create(film_data)
+    films = await repository.get_all(skip=0, limit=10, category="Action")
+    ```
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, text
@@ -8,14 +25,21 @@ from domain.schemas.film import FilmCreate, FilmUpdate
 
 
 class FilmRepository:
-    """Repository for film data access."""
+    """Repository for film data access operations.
+    
+    This class encapsulates all database operations for films, providing
+    a clean interface for the service layer. It handles raw SQL queries
+    for complex operations and type conversions.
+    
+    Attributes:
+        session: Async database session for executing queries
+    """
     
     def __init__(self, session: AsyncSession):
-        """
-        Initialize repository with database session.
+        """Initialize repository with database session.
         
         Args:
-            session: Async database session
+            session: Async database session instance
         """
         self.session = session
     

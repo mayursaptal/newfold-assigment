@@ -1,4 +1,18 @@
-"""Film service."""
+"""Film service for business logic.
+
+This module provides the FilmService class which implements business logic
+for film operations. It acts as an intermediary between the API layer and
+the repository layer, handling data transformation and business rules.
+
+Example:
+    ```python
+    from domain.services import FilmService
+    from domain.repositories import FilmRepository
+    
+    service = FilmService(repository)
+    film = await service.create_film(film_data)
+    ```
+"""
 
 from typing import List, Optional
 from domain.repositories.film_repository import FilmRepository
@@ -6,14 +20,20 @@ from domain.schemas.film import FilmCreate, FilmUpdate, FilmRead
 
 
 class FilmService:
-    """Service for film business logic."""
+    """Service for film business logic.
+    
+    This class contains business logic for film operations, orchestrating
+    repository calls and transforming data between domain models and schemas.
+    
+    Attributes:
+        repository: FilmRepository instance for data access
+    """
     
     def __init__(self, repository: FilmRepository):
-        """
-        Initialize service with repository.
+        """Initialize service with repository.
         
         Args:
-            repository: Film repository instance
+            repository: Film repository instance for data access
         """
         self.repository = repository
     

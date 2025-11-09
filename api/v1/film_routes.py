@@ -1,4 +1,30 @@
-"""Film API routes."""
+"""Film API routes.
+
+This module defines FastAPI routes for film-related endpoints. It provides
+RESTful API endpoints for creating, reading, updating, and deleting films,
+with support for pagination and category filtering.
+
+Endpoints:
+    POST /api/v1/films/ - Create a new film
+    GET /api/v1/films/ - Get all films with pagination and optional category filter
+    GET /api/v1/films/{film_id} - Get film by ID
+    PUT /api/v1/films/{film_id} - Update a film
+    DELETE /api/v1/films/{film_id} - Delete a film
+
+Example:
+    ```python
+    # Create a film
+    POST /api/v1/films/
+    {
+        "title": "The Matrix",
+        "language_id": 1,
+        "rental_duration": 3
+    }
+    
+    # Get films by category
+    GET /api/v1/films/?category=Action&skip=0&limit=10
+    ```
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional

@@ -1,4 +1,13 @@
-"""Tests for customer endpoints - one happy-path test per endpoint."""
+"""Tests for customer endpoints - one happy-path test per endpoint.
+
+This module contains pytest tests for all customer-related API endpoints.
+Each endpoint has exactly one happy-path test that verifies successful
+operation with valid input data.
+
+Test Coverage:
+    - GET /api/v1/customers/{customer_id}/rentals - Get customer rentals
+    - POST /api/v1/customers/{customer_id}/rentals - Create customer rental (with auth)
+"""
 
 import pytest
 from httpx import AsyncClient

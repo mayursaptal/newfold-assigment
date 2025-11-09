@@ -1,4 +1,18 @@
-"""Category service."""
+"""Category service for business logic.
+
+This module provides the CategoryService class which implements business logic
+for category operations. It acts as an intermediary between the API layer and
+the repository layer, handling data transformation.
+
+Example:
+    ```python
+    from domain.services import CategoryService
+    from domain.repositories import CategoryRepository
+    
+    service = CategoryService(repository)
+    categories = await service.get_categories(skip=0, limit=10)
+    ```
+"""
 
 from typing import List, Optional
 from domain.repositories.category_repository import CategoryRepository
@@ -6,14 +20,21 @@ from domain.schemas.category import CategoryRead
 
 
 class CategoryService:
-    """Service for category business logic."""
+    """Service for category business logic.
+    
+    This class contains business logic for category operations, orchestrating
+    repository calls and transforming data between domain models and schemas.
+    Categories are read-only in this application.
+    
+    Attributes:
+        repository: CategoryRepository instance for data access
+    """
     
     def __init__(self, repository: CategoryRepository):
-        """
-        Initialize service with repository.
+        """Initialize service with repository.
         
         Args:
-            repository: Category repository instance
+            repository: Category repository instance for data access
         """
         self.repository = repository
     

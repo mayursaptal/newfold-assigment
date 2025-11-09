@@ -1,4 +1,18 @@
-"""Rental service."""
+"""Rental service for business logic.
+
+This module provides the RentalService class which implements business logic
+for rental operations. It acts as an intermediary between the API layer and
+the repository layer, handling data transformation and business rules.
+
+Example:
+    ```python
+    from domain.services import RentalService
+    from domain.repositories import RentalRepository
+    
+    service = RentalService(repository)
+    rental = await service.create_rental(rental_data)
+    ```
+"""
 
 from typing import List, Optional
 from domain.repositories.rental_repository import RentalRepository
@@ -6,14 +20,20 @@ from domain.schemas.rental import RentalCreate, RentalUpdate, RentalRead
 
 
 class RentalService:
-    """Service for rental business logic."""
+    """Service for rental business logic.
+    
+    This class contains business logic for rental operations, orchestrating
+    repository calls and transforming data between domain models and schemas.
+    
+    Attributes:
+        repository: RentalRepository instance for data access
+    """
     
     def __init__(self, repository: RentalRepository):
-        """
-        Initialize service with repository.
+        """Initialize service with repository.
         
         Args:
-            repository: Rental repository instance
+            repository: Rental repository instance for data access
         """
         self.repository = repository
     

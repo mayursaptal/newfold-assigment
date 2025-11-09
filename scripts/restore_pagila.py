@@ -1,4 +1,19 @@
-"""Script to restore Pagila database from SQL files."""
+"""Script to restore Pagila database from SQL files.
+
+This script manually restores the Pagila sample database by executing
+SQL schema and data files. It can be used as an alternative to the
+automatic restoration via Docker volume mounts.
+
+Usage:
+    ```bash
+    python scripts/restore_pagila.py
+    ```
+
+Note:
+    The script expects SQL files in the sql/ directory:
+    - 01-pagila-schema.sql (or pagila-schema.sql)
+    - 02-pagila-data.sql (or pagila-data.sql)
+"""
 
 import asyncio
 import asyncpg
@@ -11,7 +26,15 @@ logger = get_logger(__name__)
 
 
 async def restore_database():
-    """Restore Pagila database from SQL files."""
+    """Restore Pagila database from SQL files.
+    
+    Connects to PostgreSQL and executes schema and data SQL files
+    in the correct order. Handles both old and new file naming conventions.
+    
+    Raises:
+        FileNotFoundError: If SQL files are not found
+        Exception: If database connection or execution fails
+    """
     # Get SQL file paths (try both old and new naming)
     sql_dir = Path(__file__).parent.parent / "sql"
     

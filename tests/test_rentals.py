@@ -1,4 +1,16 @@
-"""Tests for rental endpoints - one happy-path test per endpoint."""
+"""Tests for rental endpoints - one happy-path test per endpoint.
+
+This module contains pytest tests for all rental-related API endpoints.
+Each endpoint has exactly one happy-path test that verifies successful
+operation with valid input data.
+
+Test Coverage:
+    - POST /api/v1/rentals/ - Create rental
+    - GET /api/v1/rentals/ - Get all rentals with pagination
+    - GET /api/v1/rentals/{rental_id} - Get rental by ID
+    - PUT /api/v1/rentals/{rental_id} - Update rental
+    - DELETE /api/v1/rentals/{rental_id} - Delete rental
+"""
 
 import pytest
 from httpx import AsyncClient

@@ -1,4 +1,18 @@
-"""Alembic environment configuration for SQLModel."""
+"""Alembic environment configuration for SQLModel.
+
+This module configures Alembic's migration environment for use with
+SQLModel and async SQLAlchemy. It sets up the target metadata from
+SQLModel and provides async database connection handling.
+
+The module is used by Alembic to:
+    - Detect model changes for autogenerate
+    - Execute migrations in async context
+    - Connect to the database using application settings
+
+Note:
+    All domain models must be imported here so Alembic can detect
+    them for autogenerate functionality.
+"""
 
 from logging.config import fileConfig
 from sqlalchemy import pool

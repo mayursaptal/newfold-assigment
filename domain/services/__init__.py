@@ -1,4 +1,15 @@
-"""Domain services."""
+"""Domain services package.
+
+This package contains service classes implementing business logic for
+domain operations. Services orchestrate repository calls and handle
+data transformation between models and schemas.
+
+Exports:
+    FilmService - Film business logic
+    RentalService - Rental business logic
+    CategoryService - Category business logic
+    AIService - AI operations using Gemini
+"""
 
 from domain.services.film_service import FilmService
 from domain.services.rental_service import RentalService

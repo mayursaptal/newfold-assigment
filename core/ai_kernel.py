@@ -1,4 +1,22 @@
-"""Semantic Kernel factory and configuration for Gemini."""
+"""Semantic Kernel factory and configuration for Gemini.
+
+This module provides factory functions for creating and configuring
+Semantic Kernel instances with Google Gemini integration. It handles
+API key configuration and model setup for AI operations.
+
+Note:
+    Semantic Kernel doesn't have a native Google connector, so this
+    module configures the Google Generative AI SDK directly and stores
+    configuration in the kernel instance for use by services.
+
+Example:
+    ```python
+    from core.ai_kernel import get_default_kernel
+    
+    kernel = get_default_kernel()
+    # Kernel is configured with Gemini API key and model
+    ```
+"""
 
 from semantic_kernel import Kernel
 from typing import Optional, Any
@@ -68,6 +86,19 @@ def create_kernel(
 
 
 def get_default_kernel() -> Kernel:
-    """Get a default kernel instance with settings."""
+    """Get a default kernel instance with settings.
+    
+    Creates a Semantic Kernel instance using application settings
+    for API key and model configuration.
+    
+    Returns:
+        Kernel: Configured kernel instance with Gemini API settings
+        
+    Example:
+        ```python
+        kernel = get_default_kernel()
+        # Use kernel for AI operations
+        ```
+    """
     return create_kernel()
 

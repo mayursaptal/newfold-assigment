@@ -1,4 +1,21 @@
-"""Rental repository."""
+"""Rental repository for database operations.
+
+This module provides the RentalRepository class which implements the repository
+pattern for rental data access. It handles all database operations for rentals
+including CRUD operations and filtering by customer.
+
+The repository uses raw SQL queries for complex operations to work around
+SQLModel's foreign key resolution limitations with the Pagila schema.
+
+Example:
+    ```python
+    from domain.repositories import RentalRepository
+    
+    repository = RentalRepository(session)
+    rental = await repository.create(rental_data)
+    rentals = await repository.get_all(skip=0, limit=10, customer_id=1)
+    ```
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, delete, text
@@ -8,14 +25,21 @@ from domain.schemas.rental import RentalCreate, RentalUpdate
 
 
 class RentalRepository:
-    """Repository for rental data access."""
+    """Repository for rental data access operations.
+    
+    This class encapsulates all database operations for rentals, providing
+    a clean interface for the service layer. It handles raw SQL queries
+    for complex operations and type conversions.
+    
+    Attributes:
+        session: Async database session for executing queries
+    """
     
     def __init__(self, session: AsyncSession):
-        """
-        Initialize repository with database session.
+        """Initialize repository with database session.
         
         Args:
-            session: Async database session
+            session: Async database session instance
         """
         self.session = session
     

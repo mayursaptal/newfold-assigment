@@ -1,4 +1,16 @@
-"""Tests for AI endpoints - one happy-path test per endpoint."""
+"""Tests for AI endpoints - one happy-path test per endpoint.
+
+This module contains pytest tests for all AI-related API endpoints.
+Each endpoint has exactly one happy-path test that verifies successful
+operation. AI service methods are mocked to avoid actual API calls.
+
+Test Coverage:
+    - GET /api/v1/ai/ask?question=... - Ask question (streaming)
+    - POST /api/v1/ai/summary - Get film summary (structured JSON)
+
+Note:
+    AI service methods are mocked to avoid external API calls during testing.
+"""
 
 import pytest
 from httpx import AsyncClient

@@ -1,4 +1,26 @@
-"""Customer API routes."""
+"""Customer API routes.
+
+This module defines FastAPI routes for customer-related endpoints. It provides
+endpoints for managing customer rentals with authentication requirements.
+
+Endpoints:
+    GET /api/v1/customers/{customer_id}/rentals - Get all rentals for a customer
+    POST /api/v1/customers/{customer_id}/rentals - Create a rental for a customer (requires Bearer token with 'dvd_' prefix)
+
+Example:
+    ```python
+    # Get customer rentals
+    GET /api/v1/customers/1/rentals?skip=0&limit=10
+    
+    # Create rental (requires Bearer token)
+    POST /api/v1/customers/1/rentals
+    Authorization: Bearer dvd_test_token_123
+    {
+        "inventory_id": 1,
+        "staff_id": 1
+    }
+    ```
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
