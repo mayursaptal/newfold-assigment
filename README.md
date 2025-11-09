@@ -1,232 +1,280 @@
 # Interview API
 
-FastAPI application with SQLModel, Semantic Kernel, Alembic migrations, and PostgreSQL in Docker.
+FastAPI application with SQLModel, Semantic Kernel (Gemini), Alembic migrations, and PostgreSQL in Docker.
+
+## Quick Start
+
+```bash
+# 1. Copy environment file
+cp .env.example .env
+# Edit .env with your configuration (especially GEMINI_API_KEY)
+
+# 2. Start services (Docker or Podman)
+cd docker
+docker-compose up -d
+# Or: podman compose up -d
+
+# 3. Database is automatically restored on first startup
+# 4. Access API at http://localhost:8000
+```
 
 ## Architecture
 
-This project follows a **layered architecture with dependency injection** pattern, inspired by the pagila_api structure:
+- **`app/`** - FastAPI entry-point
+- **`api/v1/`** - API routes (films, rentals, customers, categories, AI)
+- **`domain/`** - Business logic (models, repositories, services)
+- **`core/`** - Infrastructure (settings, db, auth, logging, dependencies)
+- **`migrations/`** - Alembic database migrations
+- **`tests/`** - Test suite
 
-- **`app/`** - FastAPI entry-point only (thin layer)
-- **`api/v1/`** - API presentation layer (routes)
-- **`domain/`** - Pure business rules, no FastAPI dependencies
-  - `models.py` - SQLModel entities
-  - `repositories.py` - DB access layer (repository pattern)
-  - `services.py` - Use-cases (business logic, AI adapter)
-- **`core/`** - Reusable, infra-agnostic helpers (shared library)
-  - `settings.py` - Pydantic BaseSettings for .env
-  - `db.py` - Async engine + session factory
-  - `dependencies.py` - FastAPI dependency injection
-  - `ai_kernel.py` - Semantic Kernel factory
-  - `auth.py` - Bearer-token guard
-  - `logging.py` - structlog JSON setup
+## Database Restore
 
-## Features
+### Automatic Restoration (Recommended)
 
-- ✅ FastAPI with async support
-- ✅ SQLModel for type-safe ORM
-- ✅ Semantic Kernel integration
-- ✅ Alembic database migrations
-- ✅ PostgreSQL in Docker
-- ✅ Dependency injection throughout
-- ✅ Structured logging with structlog
-- ✅ Bearer token authentication
-- ✅ Comprehensive test suite
-
-## Prerequisites
-
-- Python 3.10+
-- **Container Runtime**: Docker or Podman (docker-compose works with both)
-- PostgreSQL (via container)
-
-## Setup
-
-### 1. Clone and Install Dependencies
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -e ".[dev]"
-```
-
-### 2. Environment Configuration
-
-Copy `.env.example` to `.env` and update the values:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-- Database credentials
-- Semantic Kernel API key
-- Secret key for JWT
-
-### 3. Start Services and Restore Pagila Database
-
-The Docker Compose setup works with both Docker and Podman. It will automatically restore the Pagila database and start FastAPI on first startup:
+The Docker Compose setup automatically restores the Pagila database on first container creation. SQL files in `sql/` are mounted to PostgreSQL's initialization directory:
 
 ```bash
 cd docker
 docker-compose up -d
 ```
 
-**Or with Podman:**
-```bash
-cd docker
-podman compose up -d
-```
+The database will be restored automatically from:
+- `sql/01-pagila-schema.sql` (schema)
+- `sql/02-pagila-data.sql` (data)
 
-This will:
-- Start PostgreSQL container with automatic Pagila restoration from `sql/` folder
-- Build and start FastAPI container
-- Connect both containers on the same network
+### Manual Restoration
 
-The SQL files in `sql/` will be automatically executed when the PostgreSQL container is created for the first time.
-
-**View logs:**
-```bash
-cd docker
-docker-compose logs -f
-# Or with Podman:
-podman compose logs -f
-```
-
-**Stop services:**
-```bash
-cd docker
-docker-compose down
-# Or with Podman:
-podman compose down
-```
-
-**Rebuild containers:**
-```bash
-cd docker
-docker-compose up -d --build
-```
-
-**Option B: Manual Restoration (If Needed)**
-
-If you need to restore the database manually:
-
-**Using Python script:**
+**Option 1: Using Python script**
 ```bash
 python scripts/restore_pagila.py
 ```
 
-**Using Shell script:**
+**Option 2: Using psql directly**
 ```bash
-./scripts/restore_pagila.sh
+psql -h localhost -U postgres -d interview_db -f sql/01-pagila-schema.sql
+psql -h localhost -U postgres -d interview_db -f sql/02-pagila-data.sql
 ```
 
-**Using psql directly:**
+**Option 3: Using container exec**
 ```bash
-psql -h localhost -U postgres -d interview_db -f sql/pagila-schema.sql
-psql -h localhost -U postgres -d interview_db -f sql/pagila-data.sql
+# Docker
+docker exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
+docker exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
+
+# Podman
+podman exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
+podman exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
 ```
 
-This will start PostgreSQL on port 5432 and restore the Pagila sample database.
+## Database Migrations
 
-### 4. Run Migrations (Optional)
+Alembic is configured for database schema management.
 
-If you want to use Alembic migrations instead of the Pagila SQL files:
+### Apply Migrations
 
 ```bash
-# Create initial migration
-alembic revision --autogenerate -m "Initial migration"
-
-# Apply migrations
+# Apply all pending migrations
 alembic upgrade head
 ```
 
-### 5. Run the Application
-
-**If using containers (Docker/Podman):**
-The FastAPI application is already running in the container. Access it at:
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-**If running locally (without containers):**
+### Create New Migration
 
 ```bash
-# Development mode
-uvicorn app.main:app --reload
+# Autogenerate migration from SQLModel changes
+alembic revision --autogenerate -m "Description of changes"
 
-# Or use the main module
-python -m app.main
+# Manual migration
+alembic revision -m "Description of changes"
 ```
 
-### 6. Access the Application
+### Migration Commands
 
-The API will be available at:
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+```bash
+# Show current revision
+alembic current
 
-**Container Management:**
+# Show migration history
+alembic history
 
-- **View logs**: `cd docker && docker-compose logs -f`
-- **View specific service**: `cd docker && docker-compose logs -f fastapi`
-- **Restart services**: `cd docker && docker-compose restart`
-- **Rebuild**: `cd docker && docker-compose up -d --build`
+# Rollback one migration
+alembic downgrade -1
 
-## Project Structure
+# Rollback to specific revision
+alembic downgrade <revision_id>
 
+# Upgrade to specific revision
+alembic upgrade <revision_id>
 ```
-interview/
-├── app/                    # FastAPI entry-point only
-│   └── main.py
-├── api/                    # API presentation layer
-│   └── v1/
-│       ├── film_routes.py
-│       ├── rental_routes.py
-│       └── ai_routes.py
-├── domain/                 # Pure business rules
-│   ├── models.py          # SQLModel entities
-│   ├── repositories.py    # DB access layer
-│   └── services.py        # Use-cases
-├── core/                   # Shared infrastructure
-│   ├── settings.py        # Pydantic BaseSettings
-│   ├── db.py              # Database setup
-│   ├── dependencies.py    # Dependency injection
-│   ├── ai_kernel.py       # Semantic Kernel
-│   ├── auth.py            # Authentication
-│   └── logging.py         # Logging setup
-├── migrations/             # Alembic migrations
-├── tests/                  # Test suite
-├── docker/                 # Container configuration (Docker/Podman)
-│   ├── docker-compose.yml  # Works with both Docker and Podman
-│   └── Dockerfile          # FastAPI container image
-├── pyproject.toml          # Project configuration
-└── alembic.ini            # Alembic configuration
-```
+
+### Included Migrations
+
+- **001_add_streaming_available_to_film**: Adds `streaming_available` Boolean column (DEFAULT FALSE) to `film` table
+- **002_create_streaming_subscription_table**: Creates `streaming_subscription` table with id, customer_id FK, plan_name, start_date, end_date
 
 ## API Endpoints
 
+Base URL: `http://localhost:8000/api/v1`
+
 ### Films
-- `GET /api/v1/films/` - List all films
-- `GET /api/v1/films/{id}` - Get film by ID
-- `POST /api/v1/films/` - Create film
-- `PUT /api/v1/films/{id}` - Update film
-- `DELETE /api/v1/films/{id}` - Delete film
+
+**Get all films (paginated)**
+```bash
+curl -X GET "http://localhost:8000/api/v1/films/?skip=0&limit=10"
+```
+
+**Get films by category**
+```bash
+curl -X GET "http://localhost:8000/api/v1/films/?category=Action&skip=0&limit=10"
+```
+
+**Get film by ID**
+```bash
+curl -X GET "http://localhost:8000/api/v1/films/1"
+```
+
+**Create film**
+```bash
+curl -X POST "http://localhost:8000/api/v1/films/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "The Matrix",
+    "description": "A computer hacker learns about the true nature of reality",
+    "release_year": 1999,
+    "language_id": 1,
+    "rental_duration": 3,
+    "rental_rate": 4.99,
+    "length": 136,
+    "replacement_cost": 19.99,
+    "rating": "R"
+  }'
+```
+
+**Update film**
+```bash
+curl -X PUT "http://localhost:8000/api/v1/films/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "The Matrix Reloaded",
+    "rental_rate": 5.99
+  }'
+```
+
+**Delete film**
+```bash
+curl -X DELETE "http://localhost:8000/api/v1/films/1"
+```
 
 ### Rentals
-- `GET /api/v1/rentals/` - List all rentals
-- `GET /api/v1/rentals/{id}` - Get rental by ID
-- `POST /api/v1/rentals/` - Create rental
-- `PUT /api/v1/rentals/{id}` - Update rental
-- `DELETE /api/v1/rentals/{id}` - Delete rental
 
-### AI
-- `POST /api/v1/ai/generate` - Generate text
-- `POST /api/v1/ai/chat` - Chat completion
-- `GET /api/v1/ai/health` - Health check
+**Get all rentals (paginated)**
+```bash
+curl -X GET "http://localhost:8000/api/v1/rentals/?skip=0&limit=10"
+```
 
-## Testing
+**Get rental by ID**
+```bash
+curl -X GET "http://localhost:8000/api/v1/rentals/1"
+```
+
+**Create rental**
+```bash
+curl -X POST "http://localhost:8000/api/v1/rentals/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inventory_id": 1,
+    "customer_id": 1,
+    "staff_id": 1
+  }'
+```
+
+**Update rental (return date)**
+```bash
+curl -X PUT "http://localhost:8000/api/v1/rentals/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "return_date": "2024-11-10T10:00:00Z"
+  }'
+```
+
+**Delete rental**
+```bash
+curl -X DELETE "http://localhost:8000/api/v1/rentals/1"
+```
+
+### Customers
+
+**Get customer rentals**
+```bash
+curl -X GET "http://localhost:8000/api/v1/customers/1/rentals?skip=0&limit=10"
+```
+
+**Create customer rental (requires Bearer token with 'dvd_' prefix)**
+```bash
+curl -X POST "http://localhost:8000/api/v1/customers/1/rentals" \
+  -H "Authorization: Bearer dvd_admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inventory_id": 1,
+    "staff_id": 1
+  }'
+```
+
+### Categories
+
+**Get all categories (paginated)**
+```bash
+curl -X GET "http://localhost:8000/api/v1/categories?skip=0&limit=10"
+```
+
+**Get category by ID**
+```bash
+curl -X GET "http://localhost:8000/api/v1/categories/1"
+```
+
+### AI Endpoints
+
+**Ask question (streaming response)**
+```bash
+curl -X GET "http://localhost:8000/api/v1/ai/ask?question=What%20is%20artificial%20intelligence?"
+```
+
+**Get film summary (structured JSON)**
+```bash
+curl -X POST "http://localhost:8000/api/v1/ai/summary" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "film_id": 1
+  }'
+```
+
+## Environment Configuration
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Required variables:
+- `DATABASE_URL` - PostgreSQL connection string
+- `GEMINI_API_KEY` - Google Gemini API key
+- `SECRET_KEY` - JWT secret key
+- `DEBUG` - Debug mode (True/False)
+- `LOG_LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+## Development
+
+### Run Locally
+
+```bash
+# Install dependencies
+pip install -e ".[dev]"
+
+# Run application
+uvicorn app.main:app --reload
+```
+
+### Run Tests
 
 ```bash
 # Run all tests
@@ -239,131 +287,158 @@ pytest --cov=. --cov-report=html
 pytest tests/test_films.py
 ```
 
-## Database Setup
-
-### Restore Pagila Database
-
-The project includes the Pagila sample database (a PostgreSQL sample database for learning and testing).
-
-**Automatic Restoration:**
-The Docker setup automatically restores Pagila on first container creation. The SQL files in `sql/` are mounted to the PostgreSQL container's initialization directory.
-
-**Manual Restoration:**
-
-**Recommended: Using Shell script (most reliable for large SQL files):**
-```bash
-./scripts/restore_pagila.sh
-```
-
-**Alternative methods:**
-
-1. **Using Python script:**
-   ```bash
-   python scripts/restore_pagila.py
-   ```
-   Note: For very large SQL files, the shell script is more reliable.
-
-2. **Using psql directly:**
-   ```bash
-   psql -h localhost -U postgres -d interview_db -f sql/01-pagila-schema.sql
-   psql -h localhost -U postgres -d interview_db -f sql/02-pagila-data.sql
-   ```
-
-3. **Using container exec (if container is running):**
-   ```bash
-   # With Docker
-   docker exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
-   docker exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
-   
-   # Or with Podman
-   podman exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
-   podman exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
-   ```
-
-### Database Migrations (Alembic)
-
-Alembic is configured to compare SQLModel metadata with the database schema using autogenerate.
-
-**Example Migrations Included:**
-- **Migration #1**: Adds Boolean column `streaming_available` (DEFAULT FALSE) to `film` table
-- **Migration #2**: Creates `streaming_subscription` table (id, customer_id FK, plan_name, start_date, end_date) using Alembic's `op.create_table()` helper
-
-**Create a new migration (autogenerate):**
-```bash
-# Compare SQLModel metadata with DB schema and generate migration
-alembic revision --autogenerate -m "Description"
-```
-
-**Apply migrations:**
-```bash
-alembic upgrade head
-```
-
-**Rollback one migration:**
-```bash
-alembic downgrade -1
-```
-
-**Show current revision:**
-```bash
-alembic current
-```
-
-**Autogenerate Configuration:**
-The `migrations/env.py` is configured with:
-- `compare_type=True` - Compares column types
-- `compare_server_default=True` - Compares server defaults
-
-This allows Alembic to detect differences between your SQLModel models and the actual database schema.
-
-**Note:** If you're using the Pagila database, you may want to skip Alembic migrations or use them only for custom schema changes beyond Pagila.
-
-## Development
-
-### Code Quality
+### Container Management
 
 ```bash
-# Format code
-black .
+cd docker
 
-# Lint code
-ruff check .
+# Start services
+docker-compose up -d
+# Or: podman compose up -d
 
-# Type checking
-mypy .
+# View logs
+docker-compose logs -f
+# Or: podman compose logs -f
+
+# Stop services
+docker-compose down
+# Or: podman compose down
+
+# Rebuild containers
+docker-compose up -d --build
 ```
 
-## Configuration
+## Viewing Application Logs
 
-### Environment Variables (.env)
+The application uses structured logging with `structlog`. Logs are output to **stdout** and can be viewed through container logs.
 
-- `DATABASE_URL` - PostgreSQL connection string
-- `POSTGRES_*` - Database configuration
-- `SEMANTIC_KERNEL_API_KEY` - AI service API key
-- `SEMANTIC_KERNEL_ENDPOINT` - AI service endpoint
-- `SECRET_KEY` - JWT secret key
-- `DEBUG` - Debug mode
-- `LOG_LEVEL` - Logging level
+### Container Logs (Recommended)
 
-## Dependency Injection
-
-The project uses FastAPI's dependency injection system throughout:
-
-- Database sessions are injected via `get_db_session()`
-- Repositories are injected via `get_*_repository()`
-- Services are injected via `get_*_service()`
-- AI Kernel is injected via `get_ai_kernel()`
-
-Example:
-```python
-@router.get("/films")
-async def get_films(
-    service: FilmService = Depends(get_film_service)
-):
-    return await service.get_films()
+**View all service logs:**
+```bash
+cd docker
+docker-compose logs -f
+# Or: podman compose logs -f
 ```
+
+**View FastAPI application logs only:**
+```bash
+# Docker
+docker logs -f interview_fastapi
+
+# Podman
+podman logs -f interview_fastapi
+
+# Or using compose
+cd docker
+docker-compose logs -f fastapi
+podman compose logs -f fastapi
+```
+
+**View last N lines:**
+```bash
+docker logs --tail 100 interview_fastapi
+podman logs --tail 100 interview_fastapi
+```
+
+**View logs with timestamps:**
+```bash
+docker logs -f -t interview_fastapi
+podman logs -f -t interview_fastapi
+```
+
+### Log Format
+
+The log format depends on the `LOG_LEVEL` environment variable:
+
+- **LOG_LEVEL=DEBUG**: Human-readable console format (colorized, easy to read)
+- **LOG_LEVEL=INFO/WARNING/ERROR**: JSON format (structured, machine-readable)
+
+Example JSON log:
+```json
+{"event": "Starting application", "debug": true, "timestamp": "2024-11-09T09:00:00Z", "logger": "app.main", "level": "info"}
+```
+
+Example DEBUG log:
+```
+2024-11-09 09:00:00 [info     ] Starting application    debug=True logger=app.main
+```
+
+### Log Levels
+
+Set `LOG_LEVEL` in `.env` to control verbosity:
+- `DEBUG` - Most verbose (includes SQL queries, detailed info)
+- `INFO` - Standard information (default)
+- `WARNING` - Warnings and errors only
+- `ERROR` - Errors only
+- `CRITICAL` - Critical errors only
+
+### Local Development
+
+When running locally (not in container), logs appear directly in the terminal:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Logs will be printed to the console where you run the command.
+
+## API Documentation
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+## Project Structure
+
+```
+interview/
+├── app/                    # FastAPI entry-point
+│   └── main.py
+├── api/                    # API routes
+│   └── v1/
+│       ├── film_routes.py
+│       ├── rental_routes.py
+│       ├── customer_routes.py
+│       ├── category_routes.py
+│       └── ai_routes.py
+├── domain/                 # Business logic
+│   ├── models/            # SQLModel entities
+│   ├── schemas/           # Pydantic schemas
+│   ├── repositories/      # Data access layer
+│   └── services/          # Business logic
+├── core/                   # Infrastructure
+│   ├── settings.py        # Configuration
+│   ├── db.py              # Database setup
+│   ├── dependencies.py    # Dependency injection
+│   ├── auth.py            # Authentication
+│   ├── ai_kernel.py       # AI kernel setup
+│   └── logging.py          # Logging
+├── migrations/             # Alembic migrations
+│   └── versions/
+├── tests/                  # Test suite
+├── docker/                 # Container config
+│   ├── docker-compose.yml
+│   └── Dockerfile
+├── sql/                    # Database SQL files
+│   ├── 01-pagila-schema.sql
+│   └── 02-pagila-data.sql
+├── .env.example            # Environment template
+└── pyproject.toml          # Project config
+```
+
+## Features
+
+- ✅ FastAPI with async support
+- ✅ SQLModel for type-safe ORM
+- ✅ Google Gemini AI integration
+- ✅ Alembic database migrations
+- ✅ PostgreSQL in Docker/Podman
+- ✅ Dependency injection throughout
+- ✅ Structured logging with structlog
+- ✅ Bearer token authentication
+- ✅ Comprehensive test suite
+- ✅ Pydoc documentation
 
 ## License
 
 MIT
-
