@@ -49,6 +49,11 @@ class FilmRepository:
             values.append(":streaming_available")
             params["streaming_available"] = film_data.get("streaming_available", False)
         
+        # Add last_update if not provided (use CURRENT_TIMESTAMP)
+        if "last_update" not in columns:
+            columns.append("last_update")
+            values.append("CURRENT_TIMESTAMP")
+        
         sql_query = text(f"""
             INSERT INTO film ({', '.join(columns)})
             VALUES ({', '.join(values)})
@@ -68,6 +73,13 @@ class FilmRepository:
                 film_dict["release_year"] = None
             if film_dict.get("length") is None:
                 film_dict["length"] = None
+            # Convert last_update string to datetime if needed (for SQLite compatibility)
+            if isinstance(film_dict.get("last_update"), str) and film_dict.get("last_update") != "CURRENT_TIMESTAMP":
+                from datetime import datetime
+                try:
+                    film_dict["last_update"] = datetime.fromisoformat(film_dict["last_update"].replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    pass
             return Film(**film_dict)
         raise ValueError("Failed to create film")
     

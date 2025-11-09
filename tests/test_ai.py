@@ -1,45 +1,46 @@
-"""Tests for AI endpoints."""
+"""Tests for AI endpoints - one happy-path test per endpoint."""
 
 import pytest
 from httpx import AsyncClient
+from unittest.mock import AsyncMock, patch
 
 
 @pytest.mark.asyncio
-async def test_ai_health_check(client: AsyncClient):
-    """Test AI service health check."""
-    response = await client.get("/api/v1/ai/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["service"] == "semantic_kernel"
+async def test_ask_question(client: AsyncClient):
+    """Happy-path: Ask a question to the AI and get streaming response."""
+    # Mock the AI service to avoid actual API calls
+    with patch("domain.services.ai_service.AIService.stream_chat") as mock_stream:
+        # Mock streaming response
+        async def mock_stream_generator():
+            yield "Hello"
+            yield " "
+            yield "World"
+        
+        mock_stream.return_value = mock_stream_generator()
+        
+        response = await client.get("/api/v1/ai/ask?question=hello")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/plain; charset=utf-8"
+        # For streaming, we check the status code and content type
+        # The actual content would be streamed
 
 
 @pytest.mark.asyncio
-async def test_generate_text(client: AsyncClient):
-    """Test text generation endpoint."""
-    request_data = {
-        "prompt": "Hello, world!",
-        "max_tokens": 100,
-    }
-    
-    response = await client.post("/api/v1/ai/generate", json=request_data)
-    # Note: This will fail if Semantic Kernel is not properly configured
-    # In a real scenario, you'd mock the AI service
-    assert response.status_code in [200, 400]  # 400 if AI not configured
-
-
-@pytest.mark.asyncio
-async def test_chat_completion(client: AsyncClient):
-    """Test chat completion endpoint."""
-    request_data = {
-        "messages": [
-            {"role": "user", "content": "Hello!"}
-        ],
-        "temperature": 0.7,
-    }
-    
-    response = await client.post("/api/v1/ai/chat", json=request_data)
-    # Note: This will fail if Semantic Kernel is not properly configured
-    # In a real scenario, you'd mock the AI service
-    assert response.status_code in [200, 400]  # 400 if AI not configured
-
+async def test_get_film_summary(client: AsyncClient):
+    """Happy-path: Get AI-generated summary for a film."""
+    # Mock the AI service to avoid actual API calls
+    with patch("domain.services.ai_service.AIService.get_film_summary") as mock_summary:
+        mock_summary.return_value = {
+            "title": "Test Film",
+            "rating": "PG-13",
+            "recommended": True
+        }
+        
+        request_data = {"film_id": 1}
+        response = await client.post("/api/v1/ai/summary", json=request_data)
+        assert response.status_code == 200
+        data = response.json()
+        assert "title" in data
+        assert "rating" in data
+        assert "recommended" in data
+        assert isinstance(data["recommended"], bool)
