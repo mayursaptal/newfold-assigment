@@ -22,9 +22,9 @@ Example:
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from domain.services import AIService
+from domain.services import AIService, FilmService
 from domain.schemas import FilmSummaryRequest, FilmSummaryResponse
-from core.dependencies import get_ai_service
+from core.dependencies import get_ai_service, get_film_service
 
 router = APIRouter()
 
@@ -58,17 +58,21 @@ async def ask_question(
 @router.post("/summary", response_model=FilmSummaryResponse)
 async def get_film_summary(
     request: FilmSummaryRequest,
-    service: AIService = Depends(get_ai_service),
+    ai_service: AIService = Depends(get_ai_service),
+    film_service: FilmService = Depends(get_film_service),
 ):
     """
     Get AI-generated summary for a film with structured JSON response.
     
+    Uses Semantic Kernel's invoke method with prompt template and JSON response format.
+    
     Args:
         request: Film summary request with film_id
-        service: AI service (injected)
+        ai_service: AI service (injected)
+        film_service: Film service (injected) - used to look up film
         
     Returns:
         Structured JSON with title, rating, and recommended fields
     """
-    summary = await service.get_film_summary(request.film_id)
+    summary = await ai_service.get_film_summary(request.film_id, film_service)
     return FilmSummaryResponse(**summary)

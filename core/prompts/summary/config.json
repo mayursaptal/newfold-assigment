@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "type": "completion",
+  "description": "Generate a structured JSON summary for a film",
+  "completion": {
+    "max_tokens": 200,
+    "temperature": 0.3,
+    "top_p": 1.0,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0
+  },
+  "input": {
+    "parameters": [
+      {
+        "name": "film_text",
+        "description": "Film details including title, description, rating, and release year",
+        "defaultValue": ""
+      }
+    ]
+  }
+}
+

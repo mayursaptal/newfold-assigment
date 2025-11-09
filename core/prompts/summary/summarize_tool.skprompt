@@ -1,0 +1,11 @@
+Analyze the following film and provide a summary in JSON format with exactly these keys: title, rating, recommended (boolean).
+
+Film details:
+{{$film_text}}
+
+IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON.
+The JSON must have exactly these keys: "title", "rating", "recommended" (boolean).
+
+Respond in this exact format:
+{"title": "...", "rating": "...", "recommended": true/false}
+

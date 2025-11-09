@@ -20,6 +20,7 @@ Example:
 
 from semantic_kernel import Kernel
 from typing import Optional, Any
+import google.generativeai as genai
 from core.settings import settings
 from core.logging import get_logger
 
@@ -54,8 +55,6 @@ def create_kernel(
     
     # Use Google Generative AI SDK directly
     try:
-        import google.generativeai as genai
-        
         # Configure the API key
         genai.configure(api_key=api_key)
         
