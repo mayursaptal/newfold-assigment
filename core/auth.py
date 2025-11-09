@@ -18,13 +18,89 @@ Example:
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from typing import Optional
+from typing import Optional, Callable, Awaitable
 from core.settings import settings
 from core.logging import get_logger
 
 logger = get_logger(__name__)
 
 security = HTTPBearer()
+
+
+def create_token_guard(
+    token_validator: Optional[Callable[[str], Awaitable[bool]]] = None,
+    token_prefix: Optional[str] = None,
+    error_message: Optional[str] = None,
+) -> Callable:
+    """Create a reusable token guard function for dependency injection.
+    
+    This factory function creates a token guard that can be shared across
+    multiple endpoints. It supports custom validation logic, prefix checking,
+    and custom error messages.
+    
+    Args:
+        token_validator: Optional async function that takes a token string
+            and returns True if valid, False otherwise
+        token_prefix: Optional string prefix that token must start with
+        error_message: Optional custom error message for invalid tokens
+            
+    Returns:
+        Callable: FastAPI dependency function for token validation
+        
+    Example:
+        ```python
+        # Create a guard that requires 'dvd_' prefix
+        dvd_token_guard = create_token_guard(token_prefix="dvd_")
+        
+        # Use in route
+        @router.post("/rentals")
+        async def create_rental(
+            token: dict = Depends(dvd_token_guard)
+        ):
+            pass
+        ```
+    """
+    async def token_guard(
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+    ) -> dict:
+        """Token guard dependency function.
+        
+        Validates the bearer token based on the configured validation rules.
+        
+        Args:
+            credentials: HTTP bearer token credentials from request header
+            
+        Returns:
+            dict: Token information dictionary containing:
+                - token: The validated token string
+                - valid: Boolean indicating token is valid
+                
+        Raises:
+            HTTPException: If token validation fails
+        """
+        token = credentials.credentials
+        
+        # Check prefix if specified
+        if token_prefix and not token.startswith(token_prefix):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=error_message or f"Token must start with '{token_prefix}' prefix",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Run custom validator if provided
+        if token_validator:
+            is_valid = await token_validator(token)
+            if not is_valid:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=error_message or "Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+        
+        return {"token": token, "valid": True}
+    
+    return token_guard
 
 
 async def get_current_user(
@@ -78,45 +154,11 @@ async def get_current_user(
         )
 
 
-async def verify_dvd_token(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> dict:
-    """Verify Bearer token with 'dvd_' prefix requirement.
-    
-    Validates that a bearer token starts with the 'dvd_' prefix.
-    This is used for specific endpoints that require this token format.
-    
-    Args:
-        credentials: HTTP bearer token credentials from request header
-        
-    Returns:
-        dict: Token information dictionary containing:
-            - token: The validated token string
-            - valid: Boolean indicating token is valid
-            
-    Raises:
-        HTTPException: If token doesn't start with 'dvd_' prefix
-        
-    Example:
-        ```python
-        @router.post("/rentals")
-        async def create_rental(
-            token: dict = Depends(verify_dvd_token)
-        ):
-            # Token validated, proceed with rental creation
-            pass
-        ```
-    """
-    token = credentials.credentials
-    
-    if not token.startswith("dvd_"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token must start with 'dvd_' prefix",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return {"token": token, "valid": True}
+# Create shared token guard for 'dvd_' prefix requirement
+verify_dvd_token = create_token_guard(
+    token_prefix="dvd_",
+    error_message="Token must start with 'dvd_' prefix"
+)
 
 
 def create_access_token(data: dict) -> str:

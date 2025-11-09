@@ -26,8 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from domain.services import RentalService
 from domain.schemas import RentalRead, RentalCreate, RentalCreateRequest
-from core.dependencies import get_rental_service
-from core.auth import verify_dvd_token
+from core.dependencies import get_rental_service, get_dvd_token_guard
 
 router = APIRouter()
 
@@ -60,7 +59,7 @@ async def create_customer_rental(
     customer_id: int,
     rental_data: RentalCreateRequest,
     service: RentalService = Depends(get_rental_service),
-    token: dict = Depends(verify_dvd_token),  # Bearer token required with 'dvd_' prefix
+    token: dict = Depends(get_dvd_token_guard()),  # Bearer token required with 'dvd_' prefix
 ):
     """
     Create a new rental for a customer.

@@ -22,6 +22,7 @@ from semantic_kernel import Kernel
 from core.db import get_async_session
 from core.ai_kernel import get_default_kernel
 from core.settings import settings, Settings
+from core.auth import verify_dvd_token, get_current_user, create_token_guard
 from domain.repositories import FilmRepository, RentalRepository, CategoryRepository
 from domain.services import FilmService, RentalService, AIService, CategoryService
 
@@ -161,4 +162,50 @@ def get_ai_service(
         AIService instance
     """
     return AIService(kernel)
+
+
+# Authentication dependencies
+def get_dvd_token_guard():
+    """
+    Get DVD token guard dependency.
+    
+    Returns a token guard that validates Bearer tokens with 'dvd_' prefix.
+    This is a shared dependency that can be used across multiple endpoints.
+    
+    Returns:
+        Callable: Token guard dependency function
+        
+    Example:
+        ```python
+        @router.post("/endpoint")
+        async def protected_endpoint(
+            token: dict = Depends(get_dvd_token_guard())
+        ):
+            # Token validated
+            pass
+        ```
+    """
+    return verify_dvd_token
+
+
+def get_user_guard():
+    """
+    Get current user guard dependency.
+    
+    Returns a dependency that validates JWT tokens and extracts user information.
+    This is a shared dependency that can be used across multiple endpoints.
+    
+    Returns:
+        Callable: User guard dependency function
+        
+    Example:
+        ```python
+        @router.get("/profile")
+        async def get_profile(
+            user: dict = Depends(get_user_guard())
+        ):
+            return {"user_id": user["user_id"]}
+        ```
+    """
+    return get_current_user
 
