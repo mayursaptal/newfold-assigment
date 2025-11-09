@@ -287,21 +287,39 @@ The Docker setup automatically restores Pagila on first container creation. The 
 
 ### Database Migrations (Alembic)
 
-If you want to use Alembic migrations instead of the Pagila SQL files:
+Alembic is configured to compare SQLModel metadata with the database schema using autogenerate.
 
+**Example Migrations Included:**
+- **Migration #1**: Adds Boolean column `streaming_available` (DEFAULT FALSE) to `film` table
+- **Migration #2**: Creates `streaming_subscription` table (id, customer_id FK, plan_name, start_date, end_date) using Alembic's `op.create_table()` helper
+
+**Create a new migration (autogenerate):**
 ```bash
-# Create a new migration
+# Compare SQLModel metadata with DB schema and generate migration
 alembic revision --autogenerate -m "Description"
+```
 
-# Apply migrations
+**Apply migrations:**
+```bash
 alembic upgrade head
+```
 
-# Rollback one migration
+**Rollback one migration:**
+```bash
 alembic downgrade -1
+```
 
-# Show current revision
+**Show current revision:**
+```bash
 alembic current
 ```
+
+**Autogenerate Configuration:**
+The `migrations/env.py` is configured with:
+- `compare_type=True` - Compares column types
+- `compare_server_default=True` - Compares server defaults
+
+This allows Alembic to detect differences between your SQLModel models and the actual database schema.
 
 **Note:** If you're using the Pagila database, you may want to skip Alembic migrations or use them only for custom schema changes beyond Pagila.
 

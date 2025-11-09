@@ -54,6 +54,8 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,  # Compare column types for autogenerate
+        compare_server_default=True,  # Compare server defaults
     )
 
     with context.begin_transaction():
@@ -61,7 +63,14 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    # Configure context with compare_type=True for better autogenerate
+    # This helps compare SQLModel metadata with DB schema
+    context.configure(
+        connection=connection, 
+        target_metadata=target_metadata,
+        compare_type=True,  # Compare column types
+        compare_server_default=True,  # Compare server defaults
+    )
 
     with context.begin_transaction():
         context.run_migrations()

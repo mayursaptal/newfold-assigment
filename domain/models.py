@@ -26,6 +26,7 @@ class FilmBase(SQLModel):
     length: Optional[int] = None
     replacement_cost: float = Field(default=19.99)
     rating: Optional[FilmRating] = None
+    streaming_available: bool = Field(default=False)  # Boolean column with default FALSE
 
 
 class Film(FilmBase, table=True):
@@ -52,6 +53,7 @@ class FilmUpdate(SQLModel):
     length: Optional[int] = None
     replacement_cost: Optional[float] = None
     rating: Optional[FilmRating] = None
+    streaming_available: Optional[bool] = None
 
 
 class FilmRead(FilmBase):
