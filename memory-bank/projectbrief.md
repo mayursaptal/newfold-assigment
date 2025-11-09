@@ -6,7 +6,6 @@ Interview API is a FastAPI-based application demonstrating modern Python web dev
 - FastAPI for async web framework
 - SQLModel for type-safe ORM
 - Semantic Kernel for AI integration
-- TOML configuration management
 - Alembic for database migrations
 - PostgreSQL in Docker
 
@@ -23,7 +22,7 @@ Interview API is a FastAPI-based application demonstrating modern Python web dev
 - FastAPI application with async support
 - SQLModel for database operations
 - Semantic Kernel integration for AI features
-- TOML configuration with environment variable override
+- Environment variable configuration via Pydantic BaseSettings
 - Alembic migrations for database schema management
 - PostgreSQL database in Docker
 - Dependency injection throughout the application

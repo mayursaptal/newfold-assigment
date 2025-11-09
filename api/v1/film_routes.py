@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
-from domain.models import FilmCreate, FilmUpdate, FilmRead
+from domain.schemas import FilmCreate, FilmUpdate, FilmRead
 from domain.services import FilmService
 from core.dependencies import get_film_service
 

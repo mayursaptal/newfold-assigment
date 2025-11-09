@@ -2,7 +2,8 @@
 
 import pytest
 from httpx import AsyncClient
-from domain.models import FilmCreate, FilmRating
+from domain.schemas import FilmCreate
+from domain.models import FilmRating
 
 
 @pytest.mark.asyncio

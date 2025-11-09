@@ -10,7 +10,7 @@
 - ✅ Docker PostgreSQL setup
 - ✅ Dependency injection system
 - ✅ Structured logging
-- ✅ Configuration management (TOML + .env)
+- ✅ Configuration management (.env via Pydantic BaseSettings)
 
 ### Domain Layer
 - ✅ SQLModel entities (Film, Rental)

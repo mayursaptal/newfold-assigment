@@ -9,26 +9,26 @@ class Settings(BaseSettings):
 
     # Database Configuration
     database_url: str
-    postgres_user: str = "postgres"
-    postgres_password: str = "postgres"
-    postgres_db: str = "interview_db"
-    postgres_host: str = "localhost"
-    postgres_port: int = 5432
+    # Individual postgres fields are optional if DATABASE_URL is provided
+    postgres_user: Optional[str] = None
+    postgres_password: Optional[str] = None
+    postgres_db: Optional[str] = None
+    postgres_host: Optional[str] = None
+    postgres_port: Optional[int] = None
 
     # Application Settings
-    debug: bool = False
-    log_level: str = "INFO"
+    debug: bool
+    log_level: str
     secret_key: str
-    api_v1_prefix: str = "/api/v1"
+    api_v1_prefix: str
 
-    # Semantic Kernel / AI Configuration
-    semantic_kernel_api_key: Optional[str] = None
-    semantic_kernel_endpoint: str = "https://api.openai.com/v1"
-    semantic_kernel_model: str = "gpt-4"
+    # AI Configuration (Gemini)
+    gemini_api_key: str
+    gemini_model: str
 
     # Server Configuration
-    host: str = "0.0.0.0"
-    port: int = 8000
+    host: str
+    port: int
 
     model_config = SettingsConfigDict(
         env_file=".env",

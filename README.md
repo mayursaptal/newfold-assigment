@@ -1,6 +1,6 @@
 # Interview API
 
-FastAPI application with SQLModel, Semantic Kernel, TOML configuration, Alembic migrations, and PostgreSQL in Docker.
+FastAPI application with SQLModel, Semantic Kernel, Alembic migrations, and PostgreSQL in Docker.
 
 ## Architecture
 
@@ -14,7 +14,6 @@ This project follows a **layered architecture with dependency injection** patter
   - `services.py` - Use-cases (business logic, AI adapter)
 - **`core/`** - Reusable, infra-agnostic helpers (shared library)
   - `settings.py` - Pydantic BaseSettings for .env
-  - `config.py` - TOML file loader
   - `db.py` - Async engine + session factory
   - `dependencies.py` - FastAPI dependency injection
   - `ai_kernel.py` - Semantic Kernel factory
@@ -26,7 +25,6 @@ This project follows a **layered architecture with dependency injection** patter
 - ✅ FastAPI with async support
 - ✅ SQLModel for type-safe ORM
 - ✅ Semantic Kernel integration
-- ✅ TOML configuration with environment variable override
 - ✅ Alembic database migrations
 - ✅ PostgreSQL in Docker
 - ✅ Dependency injection throughout
@@ -193,7 +191,6 @@ interview/
 │   └── services.py        # Use-cases
 ├── core/                   # Shared infrastructure
 │   ├── settings.py        # Pydantic BaseSettings
-│   ├── config.py          # TOML loader
 │   ├── db.py              # Database setup
 │   ├── dependencies.py    # Dependency injection
 │   ├── ai_kernel.py       # Semantic Kernel
@@ -204,8 +201,6 @@ interview/
 ├── docker/                 # Container configuration (Docker/Podman)
 │   ├── docker-compose.yml  # Works with both Docker and Podman
 │   └── Dockerfile          # FastAPI container image
-├── config/                 # Configuration files
-│   └── config.toml
 ├── pyproject.toml          # Project configuration
 └── alembic.ini            # Alembic configuration
 ```
@@ -349,10 +344,6 @@ mypy .
 - `SECRET_KEY` - JWT secret key
 - `DEBUG` - Debug mode
 - `LOG_LEVEL` - Logging level
-
-### TOML Configuration (config/config.toml)
-
-Application settings can be defined in `config/config.toml`. Environment variables take precedence over TOML values.
 
 ## Dependency Injection
 

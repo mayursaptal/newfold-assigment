@@ -20,7 +20,6 @@
 ### Configuration
 - **Pydantic Settings** (2.1.0+) - Settings management
 - **python-dotenv** (1.0.0+) - Environment variable loading
-- **TOML** - Configuration file format (via tomllib in Python 3.11+)
 
 ### Authentication
 - **python-jose** (3.3.0+) - JWT handling
@@ -74,7 +73,6 @@ uvicorn app.main:app --reload
 - `pyproject.toml` - Project metadata and dependencies
 - `.env` - Environment variables (not in git)
 - `.env.example` - Environment variable template
-- `config/config.toml` - Application configuration
 - `alembic.ini` - Alembic configuration
 
 ## Database Connection
@@ -94,7 +92,7 @@ Required in `.env`:
 
 ## Constraints
 
-- Python 3.10+ required (for tomllib in Python 3.11+)
+- Python 3.10+ required
 - PostgreSQL 12+ required
 - Async/await pattern throughout
 - Type hints required for all functions

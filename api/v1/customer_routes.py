@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
 from domain.services import RentalService
-from domain.models import RentalRead
+from domain.schemas import RentalRead, RentalCreate
 from core.dependencies import get_rental_service
 from core.auth import verify_dvd_token
 
@@ -64,7 +64,6 @@ async def create_customer_rental(
     Raises:
         HTTPException: If customer not found or validation fails
     """
-    from domain.models import RentalCreate
     
     # Create rental with customer_id from path
     rental_create = RentalCreate(

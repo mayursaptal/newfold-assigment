@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from domain.models import RentalCreate, RentalUpdate, RentalRead
+from domain.schemas import RentalCreate, RentalUpdate, RentalRead
 from domain.services import RentalService
 from core.dependencies import get_rental_service
 

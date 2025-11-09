@@ -29,13 +29,11 @@ The project has been fully set up with:
 ### Key Files Created
 1. **Configuration**
    - `pyproject.toml` - Project dependencies
-   - `.env.example` - Environment template
-   - `config/config.toml` - Application config
+   - `.env` - Environment variables
    - `alembic.ini` - Migration config
 
 2. **Core Infrastructure**
    - `core/settings.py` - Pydantic BaseSettings
-   - `core/config.py` - TOML loader
    - `core/db.py` - Database setup
    - `core/dependencies.py` - Dependency injection
    - `core/ai_kernel.py` - Semantic Kernel factory
@@ -118,14 +116,12 @@ The project has been fully set up with:
 ### Technology Choices
 - **SQLModel**: Type-safe ORM with Pydantic integration
 - **Semantic Kernel**: AI orchestration framework
-- **TOML**: Human-readable configuration
 - **structlog**: Structured JSON logging
 - **pytest**: Testing framework with async support
 
 ### Configuration Strategy
 - **Environment Variables**: Runtime configuration (`.env`)
-- **TOML Files**: Default configuration (`config/config.toml`)
-- **Precedence**: Environment variables override TOML
+- **Configuration**: All settings loaded from `.env` file via Pydantic BaseSettings
 
 ## Considerations
 

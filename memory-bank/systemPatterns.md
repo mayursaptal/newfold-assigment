@@ -89,14 +89,13 @@ Business logic is encapsulated in services:
 
 ### 4. Configuration Pattern
 
-Two-tier configuration system:
+Configuration is managed through environment variables:
 
-1. **Environment Variables** (`.env`) - Runtime configuration
-2. **TOML Files** (`config/config.toml`) - Default configuration
+1. **Environment Variables** (`.env`) - Runtime configuration loaded via Pydantic BaseSettings
 
-**Location**: `core/settings.py`, `core/config.py`
+**Location**: `core/settings.py`
 
-**Precedence**: Environment variables override TOML values
+**Settings**: All configuration values are loaded from `.env` file or environment variables
 
 ### 5. Factory Pattern
 

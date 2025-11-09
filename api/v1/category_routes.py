@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from domain.services import CategoryService
-from domain.models import CategoryRead
+from domain.schemas import CategoryRead
 from core.dependencies import get_category_service
 
 router = APIRouter()

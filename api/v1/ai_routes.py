@@ -1,114 +1,68 @@
-"""AI/Semantic Kernel API routes."""
+"""AI API routes using Gemini."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 from domain.services import AIService
 from core.dependencies import get_ai_service
+import json
 
 router = APIRouter()
 
 
-class TextGenerationRequest(BaseModel):
-    """Text generation request model."""
-    prompt: str
-    max_tokens: int = 2000
+class FilmSummaryRequest(BaseModel):
+    """Film summary request model."""
+    film_id: int
 
 
-class TextGenerationResponse(BaseModel):
-    """Text generation response model."""
-    text: str
+class FilmSummaryResponse(BaseModel):
+    """Film summary response model."""
+    title: str
+    rating: str
+    recommended: bool
 
 
-class ChatMessage(BaseModel):
-    """Chat message model."""
-    role: str
-    content: str
-
-
-class ChatCompletionRequest(BaseModel):
-    """Chat completion request model."""
-    messages: List[ChatMessage]
-    temperature: float = 0.7
-
-
-class ChatCompletionResponse(BaseModel):
-    """Chat completion response model."""
-    response: str
-
-
-@router.post("/generate", response_model=TextGenerationResponse)
-async def generate_text(
-    request: TextGenerationRequest,
+@router.get("/ask")
+async def ask_question(
+    question: str = Query(..., description="Question to ask the AI"),
     service: AIService = Depends(get_ai_service),
 ):
     """
-    Generate text using Semantic Kernel.
+    Ask a question to the AI and get a streaming text response.
     
     Args:
-        request: Text generation request
+        question: Question to ask
         service: AI service (injected)
         
     Returns:
-        Generated text
+        Streaming plain text response
     """
-    try:
-        text = await service.generate_text(
-            prompt=request.prompt,
-            max_tokens=request.max_tokens,
-        )
-        return TextGenerationResponse(text=text)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+    async def generate_stream():
+        async for chunk in service.stream_chat(question):
+            yield chunk
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/plain",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+    )
 
 
-@router.post("/chat", response_model=ChatCompletionResponse)
-async def chat_completion(
-    request: ChatCompletionRequest,
+@router.post("/summary", response_model=FilmSummaryResponse)
+async def get_film_summary(
+    request: FilmSummaryRequest,
     service: AIService = Depends(get_ai_service),
 ):
     """
-    Chat completion using Semantic Kernel.
+    Get AI-generated summary for a film with structured JSON response.
     
     Args:
-        request: Chat completion request
+        request: Film summary request with film_id
         service: AI service (injected)
         
     Returns:
-        Chat response
+        Structured JSON with title, rating, and recommended fields
     """
-    try:
-        messages = [msg.model_dump() for msg in request.messages]
-        response = await service.chat_completion(
-            messages=messages,
-            temperature=request.temperature,
-        )
-        return ChatCompletionResponse(response=response)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-
-
-@router.get("/health")
-async def ai_health_check(
-    service: AIService = Depends(get_ai_service),
-):
-    """
-    Health check for AI service.
-    
-    Args:
-        service: AI service (injected)
-        
-    Returns:
-        Health status
-    """
-    return {
-        "status": "healthy",
-        "service": "semantic_kernel",
-    }
-
+    summary = await service.get_film_summary(request.film_id)
+    return FilmSummaryResponse(**summary)
