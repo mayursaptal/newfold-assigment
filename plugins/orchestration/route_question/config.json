@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "type": "completion",
+  "description": "Route user questions to the appropriate agent (SearchAgent or LLMAgent)",
+  "completion": {
+    "max_tokens": 150,
+    "temperature": 0.1,
+    "top_p": 1.0,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0
+  },
+  "input": {
+    "parameters": [
+      {
+        "name": "question",
+        "description": "User's question to be routed to an appropriate agent",
+        "defaultValue": ""
+      }
+    ]
+  }
+}
+

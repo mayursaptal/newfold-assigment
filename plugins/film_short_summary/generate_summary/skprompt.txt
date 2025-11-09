@@ -1,0 +1,12 @@
+Generate a short, engaging summary for the following film. Keep it concise (2-3 sentences) and focus on what makes the film interesting.
+
+Film Information:
+{{$film_info}}
+
+IMPORTANT: You must respond with ONLY the summary text. No markdown, no code blocks, no JSON, just plain text summary.
+
+The summary should:
+- Be 2-3 sentences long
+- Highlight the film's key appeal (plot, genre, or unique aspects)
+- Be engaging and informative
+- Avoid spoilers

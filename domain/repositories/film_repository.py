@@ -333,8 +333,10 @@ class FilmRepository:
         sql_query = text("""
             SELECT 
                 film.title,
+                film.description,
                 film.rental_rate,
                 film.rating,
+                film.release_year,
                 category.name as category
             FROM film
             LEFT JOIN film_category ON film.film_id = film_category.film_id
@@ -350,9 +352,11 @@ class FilmRepository:
         if row:
             return {
                 "title": row.title,
+                "description": row.description,
                 "category": row.category or "Unknown",
                 "rental_rate": float(row.rental_rate),
-                "rating": str(row.rating) if row.rating else None
+                "rating": str(row.rating) if row.rating else None,
+                "release_year": row.release_year
             }
         return None
 

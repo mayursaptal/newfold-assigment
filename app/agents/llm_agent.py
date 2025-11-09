@@ -1,12 +1,13 @@
 """LLMAgent for general questions using Semantic Kernel.
 
-This agent answers any question using the Semantic Kernel with the configured
-LLM model (Azure OpenAI) via kernel.invoke().
+This agent analyzes user questions and provides thoughtful, accurate answers
+using the Semantic Kernel with the configured LLM model.
 """
 
 from semantic_kernel import Kernel
 from semantic_kernel.functions import KernelArguments
 from core.logging import get_logger
+from core.plugin_loader import get_plugin_function
 
 
 class LLMAgent:
@@ -49,19 +50,12 @@ class LLMAgent:
         self.logger.info("LLMAgent processing question", question=question[:100])
         
         try:
-            # Create a simple prompt function for answering questions
-            prompt_template = "Answer the following question: {{$question}}"
-            
-            # Check if function already exists, otherwise add it
-            try:
-                answer_function = self.kernel.get_function_from_fully_qualified_function_name("General", "answer_question")
-            except:
-                answer_function = self.kernel.add_function(
-                    function_name="answer_question",
-                    plugin_name="General",
-                    prompt=prompt_template,
-                    description="Answer general questions"
-                )
+            # Use the answer_question plugin (auto-registered at kernel initialization)
+            answer_function = get_plugin_function(
+                self.kernel,
+                plugin_name="llm_agent",
+                function_name="answer_question"
+            )
             
             # Invoke the function
             arguments = KernelArguments(question=question)

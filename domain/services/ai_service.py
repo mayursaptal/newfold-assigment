@@ -24,6 +24,7 @@ from semantic_kernel.functions import KernelArguments
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
 from domain.services.film_service import FilmService
 from core.logging import get_logger
+from core.plugin_loader import get_plugin_function
 
 
 class AIService:
@@ -59,19 +60,12 @@ class AIService:
         self.logger.info("AI chat request received", question=question[:100])
         
         try:
-            # Create a simple prompt function for chat
-            prompt_template = "{{$question}}"
-            
-            # Check if function already exists, otherwise add it
-            try:
-                chat_function = self.kernel.get_function_from_fully_qualified_function_name("Chat", "stream_chat")
-            except:
-                chat_function = self.kernel.add_function(
-                    function_name="stream_chat",
-                    plugin_name="Chat",
-                    prompt=prompt_template,
-                    description="Answer user questions"
-                )
+            # Use the stream_chat plugin (auto-registered at kernel initialization)
+            chat_function = get_plugin_function(
+                self.kernel,
+                plugin_name="chat",
+                function_name="stream_chat"
+            )
             
             # Invoke with streaming
             arguments = KernelArguments(question=question)
@@ -169,57 +163,22 @@ Rating: {film.rating or 'N/A'}
 Release Year: {film.release_year or 'N/A'}"""
 
         try:
-            # Load prompt function from config.json directory
-            # Use absolute path to avoid issues in Docker
-            prompt_dir = Path("core/prompts/summary")
-            if not prompt_dir.exists():
-                prompt_dir = Path("/app/core/prompts/summary")
+            # Use plugin loader to get the function (auto-registered at kernel initialization)
+            from core.plugin_loader import get_plugin_function
             
-            config_file = prompt_dir / "config.json"
-            prompt_file = prompt_dir / "summarize_tool.skprompt"
-            
-            # Load config.json for execution settings
-            with open(config_file, "r", encoding="utf-8") as f:
-                config = json.load(f)
-            
-            # Load prompt template from .skprompt file
-            with open(prompt_file, "r", encoding="utf-8") as f:
-                prompt_template = f.read()
-            
-            # Always reload the function to ensure latest prompt is used
-            # Remove existing function if it exists
-            try:
-                existing_plugin = self.kernel.get_plugin("FilmSummary")
-                if existing_plugin:
-                    # Remove the plugin to force reload
-                    del self.kernel.plugins["FilmSummary"]
-            except:
-                pass
-            
-            # Create the function with latest prompt
-            summarize_function = self.kernel.add_function(
-                function_name="summarize_tool",
-                plugin_name="FilmSummary",
-                prompt=prompt_template,
-                description=config.get("description", "Generate a structured JSON summary for a film")
+            summarize_function = get_plugin_function(
+                self.kernel,
+                plugin_name="film_summary",
+                function_name="summarize_tool"
             )
             
-            # Create execution settings from config.json
-            completion_config = config.get("completion", {})
-            # Create settings without response_format to avoid encoding issues
-            execution_settings = OpenAIChatPromptExecutionSettings(
-                temperature=completion_config.get("temperature", 0.3),
-                max_tokens=completion_config.get("max_tokens", 200),
-                top_p=completion_config.get("top_p", 1.0),
-                presence_penalty=completion_config.get("presence_penalty", 0.0),
-                frequency_penalty=completion_config.get("frequency_penalty", 0.0)
-            )
+            # Get execution settings from plugin config (optional, for future use)
+            # The config settings are already applied via the function's default settings
             
             # Invoke the function with film_text as input
             arguments = KernelArguments(film_text=film_text)
             
-            # Invoke without execution_settings to avoid encoding issues
-            # The config.json settings will be applied via the function's default settings
+            # Invoke the function (execution settings from config.json are applied automatically)
             response = await self.kernel.invoke(
                 function=summarize_function,
                 arguments=arguments

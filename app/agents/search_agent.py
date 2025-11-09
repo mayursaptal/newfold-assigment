@@ -1,13 +1,15 @@
 """SearchAgent for film-related questions.
 
-This agent examines the user's question, fetches matching film title and category
-from PostgreSQL, and returns a short text answer about the film's rental rate.
+This agent examines the user's question, fetches matching film information
+from PostgreSQL, and generates a short summary of the movie using AI.
 """
 
 import re
 from semantic_kernel import Kernel
+from semantic_kernel.functions import KernelArguments
 from domain.repositories.film_repository import FilmRepository
 from core.logging import get_logger
+from core.plugin_loader import get_plugin_function
 
 
 class SearchAgent:
@@ -36,13 +38,90 @@ class SearchAgent:
         self.repository = repository
         self.logger = get_logger(__name__)
         self.name = "SearchAgent"  # Required for OrchestrationHandoffs
-        self.description = "A customer support agent that searches for film information in the database and provides rental rate information."
+        self.description = "A customer support agent that searches for film information in the database and generates short summaries of movies."
         
         # Create a minimal kernel if not provided (required for HandoffOrchestration)
         if kernel is None:
             from semantic_kernel import Kernel
             kernel = Kernel()
         self.kernel = kernel
+    
+    async def _generate_film_summary(self, film_info: dict) -> str:
+        """
+        Generate a short summary of the film using AI.
+        
+        Args:
+            film_info: Dictionary with film information
+            
+        Returns:
+            Short summary string (2-3 sentences)
+        """
+        try:
+            # Get short summary function (auto-registered at kernel initialization)
+            summary_function = get_plugin_function(
+                self.kernel,
+                plugin_name="film_short_summary",
+                function_name="generate_summary"
+            )
+            
+            # Prepare film info text
+            film_info_text = f"""Title: {film_info['title']}
+Category: {film_info['category']}
+Rating: {film_info.get('rating', 'N/A')}
+Release Year: {film_info.get('release_year', 'N/A')}
+Description: {film_info.get('description', 'No description available')}"""
+            
+            # Invoke summary function
+            arguments = KernelArguments(film_info=film_info_text)
+            response = await self.kernel.invoke(
+                function=summary_function,
+                arguments=arguments
+            )
+            
+            # Extract response content
+            summary = ""
+            if hasattr(response, 'value'):
+                response_value = response.value
+                
+                # Handle list responses
+                if isinstance(response_value, list):
+                    for item in response_value:
+                        if hasattr(item, 'content') and item.content:
+                            summary = str(item.content)
+                            break
+                        elif hasattr(item, 'inner_content'):
+                            inner = item.inner_content
+                            if hasattr(inner, 'choices') and inner.choices:
+                                choice = inner.choices[0]
+                                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                                    summary = str(choice.message.content)
+                                    break
+                # Handle single object
+                else:
+                    if hasattr(response_value, 'content') and response_value.content:
+                        summary = str(response_value.content)
+                    elif hasattr(response_value, 'inner_content'):
+                        inner = response_value.inner_content
+                        if hasattr(inner, 'choices') and inner.choices:
+                            choice = inner.choices[0]
+                            if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                                summary = str(choice.message.content)
+            
+            # Clean up summary
+            summary = summary.strip()
+            
+            # Remove markdown code blocks if present
+            if summary.startswith("```"):
+                lines = summary.split('\n')
+                summary = '\n'.join(lines[1:-1]) if len(lines) > 2 else summary
+            
+            return summary
+                
+        except Exception as e:
+            self.logger.error("Failed to generate AI summary",
+                              error=str(e),
+                              error_type=type(e).__name__)
+            raise
     
     async def process(self, question: str) -> str:
         """
@@ -147,36 +226,31 @@ class SearchAgent:
             self.logger.info("Film not found in database", film_title=film_title)
             return None
         
-        # Format answer based on what the question is asking - only provide requested information
-        category = film_info["category"]
-        rental_rate = film_info["rental_rate"]
-        title = film_info["title"]
-        rating = film_info.get("rating")
-        
+        # Determine what the user is asking for
         question_lower = question.lower()
         
-        # Check what information is being asked for - be specific and only answer what's asked
+        # Check for specific information requests
         if "rating" in question_lower or "rated" in question_lower:
             # Question is about rating - only return rating
+            rating = film_info.get("rating")
             if rating:
-                answer = f"{title} is rated {rating}."
+                return f"{film_info['title']} is rated {rating}."
             else:
-                answer = f"{title} does not have a rating available."
+                return f"{film_info['title']} does not have a rating available."
         elif "rental" in question_lower or ("rate" in question_lower and "rental" in question_lower) or "cost" in question_lower or "price" in question_lower:
             # Question is about rental rate - only return rental rate
-            answer = f"{title} rents for ${rental_rate:.2f}."
+            return f"{film_info['title']} rents for ${film_info['rental_rate']:.2f}."
         elif "category" in question_lower:
             # Question is about category - only return category
-            answer = f"{title} is in the {category} category."
+            return f"{film_info['title']} is in the {film_info['category']} category."
         else:
-            # Default: minimal info - just title and category if no specific question
-            answer = f"{title} ({category})."
-        
-        self.logger.info("SearchAgent found film", 
-                        film_title=title, 
-                        category=category, 
-                        rental_rate=rental_rate,
-                        rating=rating)
-        
-        return answer
+            # Default: Generate a short summary of the movie
+            summary = await self._generate_film_summary(film_info)
+            
+            self.logger.info("SearchAgent generated film summary", 
+                            film_title=film_info['title'], 
+                            category=film_info['category'],
+                            summary_length=len(summary))
+            
+            return summary
 

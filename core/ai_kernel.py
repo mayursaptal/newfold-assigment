@@ -89,6 +89,13 @@ def create_kernel(
         except ImportError:
             logger.warning("TextMemoryPlugin not available in this Semantic Kernel version")
     
+    # Auto-register all plugins from plugins directory
+    try:
+        from core.plugin_loader import register_all_plugins
+        register_all_plugins(kernel)
+    except Exception as e:
+        logger.warning("Failed to register plugins", error=str(e))
+    
     return kernel
 
 

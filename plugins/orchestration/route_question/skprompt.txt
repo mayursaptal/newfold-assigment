@@ -1,0 +1,27 @@
+Analyze the following user question and determine which agent should handle it.
+
+User Question: {{$question}}
+
+Available Agents:
+1. SearchAgent - Handles questions about specific films, including:
+   - Film titles, ratings, rental rates, categories
+   - Questions like "What is the rating of [film]?", "How much does [film] cost to rent?", "What category is [film]?"
+   - Any question that mentions a specific film title or asks about film database information
+
+2. LLMAgent - Handles general questions, including:
+   - General knowledge questions
+   - Questions not related to films
+   - Conversational questions
+   - Questions that don't require database lookups
+
+IMPORTANT: You must respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON.
+The JSON must have exactly these keys: "agent" (string: "SearchAgent" or "LLMAgent"), "confidence" (float 0.0-1.0), "reasoning" (string: brief explanation).
+
+Analyze the question carefully:
+- If the question mentions a film title, asks about film ratings, rental rates, categories, or any film-specific information → Choose SearchAgent
+- If the question is general knowledge, conversational, or unrelated to films → Choose LLMAgent
+- If unsure but question might be about films → Choose SearchAgent (it can hand off to LLMAgent if no match found)
+
+Respond in this exact format:
+{"agent": "SearchAgent" or "LLMAgent", "confidence": 0.0-1.0, "reasoning": "brief explanation"}
+
