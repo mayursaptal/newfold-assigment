@@ -44,9 +44,7 @@ services:
       # SECRETS - These should be injected via environment variables in production
       # Never commit actual secrets to version control
       # Example: docker-compose run -e SECRET_KEY=actual-secret fastapi
-      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-your-gemini-api-key-here}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash-exp}
+   
     env_file:
       - ../.env
     ports:
