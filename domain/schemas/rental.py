@@ -3,12 +3,20 @@
 from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
 class RentalCreate(SQLModel):
     """Rental creation schema."""
     inventory_id: int
     customer_id: int
+    staff_id: int
+    rental_date: Optional[datetime] = None  # Will default to now() if not provided
+
+
+class RentalCreateRequest(BaseModel):
+    """Rental creation request model (for customer-specific endpoints)."""
+    inventory_id: int
     staff_id: int
     rental_date: Optional[datetime] = None  # Will default to now() if not provided
 

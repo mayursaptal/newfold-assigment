@@ -38,8 +38,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyDYvCumliSPeLtX9r6fsoWic_BDCRPseHk}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+  
       HOST: ${HOST:-0.0.0.0}
       PORT: ${PORT:-8000}
     env_file:

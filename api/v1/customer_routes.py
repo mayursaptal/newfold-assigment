@@ -1,22 +1,13 @@
 """Customer API routes."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-from datetime import datetime
-from typing import List, Optional
+from typing import List
 from domain.services import RentalService
-from domain.schemas import RentalRead, RentalCreate
+from domain.schemas import RentalRead, RentalCreate, RentalCreateRequest
 from core.dependencies import get_rental_service
 from core.auth import verify_dvd_token
 
 router = APIRouter()
-
-
-class RentalCreateRequest(BaseModel):
-    """Rental creation request model."""
-    inventory_id: int
-    staff_id: int
-    rental_date: Optional[datetime] = None  # Will default to now() if not provided
 
 
 @router.get("/{customer_id}/rentals", response_model=List[RentalRead])

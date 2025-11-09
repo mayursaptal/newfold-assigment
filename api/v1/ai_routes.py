@@ -2,25 +2,11 @@
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from typing import Optional
 from domain.services import AIService
+from domain.schemas import FilmSummaryRequest, FilmSummaryResponse
 from core.dependencies import get_ai_service
-import json
 
 router = APIRouter()
-
-
-class FilmSummaryRequest(BaseModel):
-    """Film summary request model."""
-    film_id: int
-
-
-class FilmSummaryResponse(BaseModel):
-    """Film summary response model."""
-    title: str
-    rating: str
-    recommended: bool
 
 
 @router.get("/ask")

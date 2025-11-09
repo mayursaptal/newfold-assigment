@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel
+from pydantic import BaseModel
 from domain.models.film import FilmBase, FilmRating
 
 
@@ -28,4 +29,16 @@ class FilmRead(FilmBase):
     """Film read schema."""
     id: int
     last_update: datetime
+
+
+class FilmSummaryRequest(BaseModel):
+    """Film summary request model."""
+    film_id: int
+
+
+class FilmSummaryResponse(BaseModel):
+    """Film summary response model."""
+    title: str
+    rating: str
+    recommended: bool
 
