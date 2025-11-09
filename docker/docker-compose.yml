@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -19,6 +20,34 @@ services:
       retries: 5
     networks:
       - interview_network
+
+  fastapi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    container_name: interview_fastapi
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/interview_db
+      DEBUG: "True"
+      LOG_LEVEL: INFO
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      API_V1_PREFIX: /api/v1
+      SEMANTIC_KERNEL_API_KEY: ${SEMANTIC_KERNEL_API_KEY:-}
+      SEMANTIC_KERNEL_ENDPOINT: ${SEMANTIC_KERNEL_ENDPOINT:-https://api.openai.com/v1}
+      SEMANTIC_KERNEL_MODEL: ${SEMANTIC_KERNEL_MODEL:-gpt-4}
+      HOST: 0.0.0.0
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - interview_network
+    volumes:
+      - ../:/app
+    restart: unless-stopped
 
 volumes:
   postgres_data:

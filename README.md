@@ -37,8 +37,8 @@ This project follows a **layered architecture with dependency injection** patter
 ## Prerequisites
 
 - Python 3.10+
-- Docker and Docker Compose
-- PostgreSQL (via Docker)
+- **Container Runtime**: Docker or Podman (docker-compose works with both)
+- PostgreSQL (via container)
 
 ## Setup
 
@@ -66,16 +66,75 @@ Edit `.env` with your configuration:
 - Semantic Kernel API key
 - Secret key for JWT
 
-### 3. Start PostgreSQL
+### 3. Start Services and Restore Pagila Database
+
+The Docker Compose setup works with both Docker and Podman. It will automatically restore the Pagila database and start FastAPI on first startup:
 
 ```bash
 cd docker
 docker-compose up -d
 ```
 
-This will start PostgreSQL on port 5432.
+**Or with Podman:**
+```bash
+cd docker
+podman compose up -d
+```
 
-### 4. Run Migrations
+This will:
+- Start PostgreSQL container with automatic Pagila restoration from `sql/` folder
+- Build and start FastAPI container
+- Connect both containers on the same network
+
+The SQL files in `sql/` will be automatically executed when the PostgreSQL container is created for the first time.
+
+**View logs:**
+```bash
+cd docker
+docker-compose logs -f
+# Or with Podman:
+podman compose logs -f
+```
+
+**Stop services:**
+```bash
+cd docker
+docker-compose down
+# Or with Podman:
+podman compose down
+```
+
+**Rebuild containers:**
+```bash
+cd docker
+docker-compose up -d --build
+```
+
+**Option B: Manual Restoration (If Needed)**
+
+If you need to restore the database manually:
+
+**Using Python script:**
+```bash
+python scripts/restore_pagila.py
+```
+
+**Using Shell script:**
+```bash
+./scripts/restore_pagila.sh
+```
+
+**Using psql directly:**
+```bash
+psql -h localhost -U postgres -d interview_db -f sql/pagila-schema.sql
+psql -h localhost -U postgres -d interview_db -f sql/pagila-data.sql
+```
+
+This will start PostgreSQL on port 5432 and restore the Pagila sample database.
+
+### 4. Run Migrations (Optional)
+
+If you want to use Alembic migrations instead of the Pagila SQL files:
 
 ```bash
 # Create initial migration
@@ -87,6 +146,14 @@ alembic upgrade head
 
 ### 5. Run the Application
 
+**If using containers (Docker/Podman):**
+The FastAPI application is already running in the container. Access it at:
+- API: http://localhost:8000
+- Docs: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+**If running locally (without containers):**
+
 ```bash
 # Development mode
 uvicorn app.main:app --reload
@@ -95,10 +162,19 @@ uvicorn app.main:app --reload
 python -m app.main
 ```
 
+### 6. Access the Application
+
 The API will be available at:
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+
+**Container Management:**
+
+- **View logs**: `cd docker && docker-compose logs -f`
+- **View specific service**: `cd docker && docker-compose logs -f fastapi`
+- **Restart services**: `cd docker && docker-compose restart`
+- **Rebuild**: `cd docker && docker-compose up -d --build`
 
 ## Project Structure
 
@@ -125,8 +201,9 @@ interview/
 │   └── logging.py         # Logging setup
 ├── migrations/             # Alembic migrations
 ├── tests/                  # Test suite
-├── docker/                 # Docker configuration
-│   └── docker-compose.yml
+├── docker/                 # Container configuration (Docker/Podman)
+│   ├── docker-compose.yml  # Works with both Docker and Podman
+│   └── Dockerfile          # FastAPI container image
 ├── config/                 # Configuration files
 │   └── config.toml
 ├── pyproject.toml          # Project configuration
@@ -167,7 +244,50 @@ pytest --cov=. --cov-report=html
 pytest tests/test_films.py
 ```
 
-## Database Migrations
+## Database Setup
+
+### Restore Pagila Database
+
+The project includes the Pagila sample database (a PostgreSQL sample database for learning and testing).
+
+**Automatic Restoration:**
+The Docker setup automatically restores Pagila on first container creation. The SQL files in `sql/` are mounted to the PostgreSQL container's initialization directory.
+
+**Manual Restoration:**
+
+**Recommended: Using Shell script (most reliable for large SQL files):**
+```bash
+./scripts/restore_pagila.sh
+```
+
+**Alternative methods:**
+
+1. **Using Python script:**
+   ```bash
+   python scripts/restore_pagila.py
+   ```
+   Note: For very large SQL files, the shell script is more reliable.
+
+2. **Using psql directly:**
+   ```bash
+   psql -h localhost -U postgres -d interview_db -f sql/01-pagila-schema.sql
+   psql -h localhost -U postgres -d interview_db -f sql/02-pagila-data.sql
+   ```
+
+3. **Using container exec (if container is running):**
+   ```bash
+   # With Docker
+   docker exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
+   docker exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
+   
+   # Or with Podman
+   podman exec -i interview_postgres psql -U postgres -d interview_db < sql/01-pagila-schema.sql
+   podman exec -i interview_postgres psql -U postgres -d interview_db < sql/02-pagila-data.sql
+   ```
+
+### Database Migrations (Alembic)
+
+If you want to use Alembic migrations instead of the Pagila SQL files:
 
 ```bash
 # Create a new migration
@@ -182,6 +302,8 @@ alembic downgrade -1
 # Show current revision
 alembic current
 ```
+
+**Note:** If you're using the Pagila database, you may want to skip Alembic migrations or use them only for custom schema changes beyond Pagila.
 
 ## Development
 
