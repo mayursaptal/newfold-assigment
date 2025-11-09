@@ -15,7 +15,13 @@
 
 ### AI/ML
 - **Semantic Kernel** (0.9.0+) - AI orchestration framework
-- **OpenAI** - AI service provider (configurable)
+  - `ChatCompletionAgent` - AI agent implementation
+  - `HandoffOrchestration` - Agent-to-agent routing
+  - `OrchestrationHandoffs` - Handoff configuration
+  - `InProcessRuntime` - Agent execution runtime
+  - Native function plugins (`@kernel_function`)
+  - Prompt-based plugins (from directory structure)
+- **OpenAI** - AI service provider (configurable via `OPENAI_API_KEY`)
 
 ### Configuration
 - **Pydantic Settings** (2.1.0+) - Settings management
@@ -86,7 +92,7 @@ uvicorn app.main:app --reload
 Required in `.env`:
 - `DATABASE_URL` - PostgreSQL connection string
 - `SECRET_KEY` - JWT secret key
-- `SEMANTIC_KERNEL_API_KEY` - AI service API key (optional)
+- `OPENAI_API_KEY` - OpenAI API key (required for AI features)
 - `DEBUG` - Debug mode flag
 - `LOG_LEVEL` - Logging level
 
@@ -96,4 +102,38 @@ Required in `.env`:
 - PostgreSQL 12+ required
 - Async/await pattern throughout
 - Type hints required for all functions
+- Semantic Kernel plugins must follow expected directory structure
+- Native function plugins must be registered before agent creation
+- OpenAI API key required for AI agent functionality
+
+## Semantic Kernel Plugin Structure
+
+### Prompt-based Plugins
+```
+plugins/
+    plugin_name/
+        function_name/
+            skprompt.txt          # Prompt template
+            config.json           # Function configuration (optional)
+```
+
+### Native Function Plugins
+```python
+from semantic_kernel.functions import kernel_function
+
+class MyPlugin:
+    @kernel_function(
+        name="function_name",
+        description="Function description"
+    )
+    async def my_function(self, param: str) -> dict:
+        # Implementation
+        pass
+```
+
+Registration:
+```python
+plugin = MyPlugin(repository)
+kernel.add_plugin(plugin, "plugin_name")
+```
 

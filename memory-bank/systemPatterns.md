@@ -136,13 +136,21 @@ app/main.py
     ├── api/v1/router
     │   ├── film_routes → FilmService
     │   ├── rental_routes → RentalService
-    │   └── ai_routes → AIService
+    │   ├── category_routes → CategoryService
+    │   ├── customer_routes → CustomerService
+    │   └── ai_routes → HandoffOrchestration
+    │       └── create_handoff_orchestration()
+    │           ├── SearchAgent (ChatCompletionAgent)
+    │           │   └── FilmSearchPlugin (native function)
+    │           └── LLMAgent (ChatCompletionAgent)
+    │               └── llm_agent plugin (prompt-based)
     │
     └── core/
         ├── settings.py (used by all)
         ├── db.py (used by repositories)
         ├── dependencies.py (injection functions)
-        ├── ai_kernel.py (used by AIService)
+        ├── ai_kernel.py (used by agents)
+        ├── plugin_loader.py (plugin registration)
         ├── auth.py (optional, for protected routes)
         └── logging.py (used by all)
 ```
@@ -214,4 +222,110 @@ async def protected_route(
 ):
     return {"user": current_user}
 ```
+
+## Agent Orchestration Pattern
+
+### Semantic Kernel HandoffOrchestration
+
+The project uses Semantic Kernel's native `HandoffOrchestration` to route questions between specialized agents:
+
+- **SearchAgent**: Handles film-related questions using native function plugins
+- **LLMAgent**: Handles general questions using prompt-based plugins
+- **HandoffOrchestration**: Manages agent-to-agent transfers
+
+**Location**: `app/agents/orchestration.py`
+
+**Key Components**:
+1. **ChatCompletionAgent**: Both agents use Semantic Kernel's `ChatCompletionAgent`
+2. **OrchestrationHandoffs**: Defines handoff rules between agents
+3. **InProcessRuntime**: Executes agents in API context
+4. **Native Function Plugins**: Database operations exposed as kernel functions
+5. **Prompt-based Plugins**: LLM operations using Semantic Kernel prompts
+
+**Agent Creation**:
+```python
+def create_handoff_orchestration(session: AsyncSession, kernel: Kernel):
+    # Create agents
+    search_agent = SearchAgent(repository, kernel).agent
+    llm_agent = LLMAgent(kernel).agent
+    
+    # Configure handoffs
+    handoffs = (
+        OrchestrationHandoffs()
+        .add(
+            source_agent=search_agent.name,
+            target_agent=llm_agent.name,
+            description="Transfer to LLMAgent if no film found"
+        )
+    )
+    
+    # Create orchestration
+    orchestration = HandoffOrchestration(
+        members=[search_agent, llm_agent],
+        handoffs=handoffs
+    )
+    return orchestration
+```
+
+**Usage in API**:
+```python
+@router.post("/handoff")
+async def handoff_question(request: HandoffRequest, ...):
+    orchestration, tracker = create_handoff_orchestration(session, kernel)
+    runtime = InProcessRuntime()
+    runtime.start()
+    result = await orchestration.invoke(task=request.question, runtime=runtime)
+    return result
+```
+
+## Plugin Pattern
+
+### Native Function Plugins
+
+Python functions exposed as Semantic Kernel tools:
+
+**Location**: `plugins/film_search/film_search_plugin.py`
+
+**Example**:
+```python
+from semantic_kernel.functions import kernel_function
+
+class FilmSearchPlugin:
+    @kernel_function(
+        name="search_film",
+        description="Search for a film by title"
+    )
+    async def search_film(self, title: str) -> Optional[dict]:
+        return await self.repository.search_by_title_with_category(title)
+```
+
+**Registration**:
+```python
+plugin = FilmSearchPlugin(repository)
+kernel.add_plugin(plugin, "film_search")
+```
+
+### Prompt-based Plugins
+
+Semantic Kernel prompts loaded from directory structure:
+
+**Structure**:
+```
+plugins/
+    plugin_name/
+        function_name/
+            skprompt.txt
+            config.json
+```
+
+**Registration**:
+```python
+kernel.add_plugin(
+    plugin_name="plugin_name",
+    parent_directory="plugins",
+    encoding="utf-8"
+)
+```
+
+**Location**: `core/plugin_loader.py`
 

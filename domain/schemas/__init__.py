@@ -7,6 +7,7 @@ Exports:
     Film schemas: FilmCreate, FilmUpdate, FilmRead, FilmSummaryRequest, FilmSummaryResponse
     Rental schemas: RentalCreate, RentalCreateRequest, RentalUpdate, RentalRead
     Category schemas: CategoryRead
+    Handoff schemas: HandoffRequest, HandoffResponse
 """
 
 from domain.schemas.film import (
@@ -23,6 +24,7 @@ from domain.schemas.rental import (
     RentalRead,
 )
 from domain.schemas.category import CategoryRead
+from domain.schemas.handoff import HandoffRequest, HandoffResponse
 
 __all__ = [
     "FilmCreate",
@@ -35,5 +37,7 @@ __all__ = [
     "RentalUpdate",
     "RentalRead",
     "CategoryRead",
+    "HandoffRequest",
+    "HandoffResponse",
 ]
 

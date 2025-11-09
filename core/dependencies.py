@@ -24,7 +24,7 @@ from core.ai_kernel import get_default_kernel
 from core.settings import settings, Settings
 from core.auth import verify_dvd_token, get_current_user, create_token_guard
 from domain.repositories import FilmRepository, RentalRepository, CategoryRepository
-from domain.services import FilmService, RentalService, AIService, CategoryService
+from domain.services import FilmService, RentalService, AIService, CategoryService, HandoffService
 
 
 # Database dependencies
@@ -162,6 +162,24 @@ def get_ai_service(
         AIService instance
     """
     return AIService(kernel)
+
+
+# Handoff Service dependency
+def get_handoff_service(
+    session: AsyncSession = Depends(get_db_session),
+    kernel: Kernel = Depends(get_ai_kernel),
+) -> HandoffService:
+    """
+    Get handoff service instance.
+    
+    Args:
+        session: Database session
+        kernel: Semantic Kernel instance
+        
+    Returns:
+        HandoffService instance
+    """
+    return HandoffService(session, kernel)
 
 
 # Authentication dependencies

@@ -22,14 +22,9 @@ Example:
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from domain.services import AIService, FilmService
-from domain.schemas import FilmSummaryRequest, FilmSummaryResponse
-from core.dependencies import get_ai_service, get_film_service, get_db_session, get_ai_kernel
-from app.agents import HandoffOrchestration, SearchAgent, LLMAgent
-from domain.repositories import FilmRepository
-from semantic_kernel import Kernel
-from sqlalchemy.ext.asyncio import AsyncSession
+from domain.services import AIService, FilmService, HandoffService
+from domain.schemas import FilmSummaryRequest, FilmSummaryResponse, HandoffRequest, HandoffResponse
+from core.dependencies import get_ai_service, get_film_service, get_handoff_service
 
 router = APIRouter()
 
@@ -83,59 +78,25 @@ async def get_film_summary(
     return FilmSummaryResponse(**summary)
 
 
-class HandoffRequest(BaseModel):
-    """Request model for handoff endpoint.
-    
-    Attributes:
-        question: User's question to be answered
-    """
-    question: str
-
-
-class HandoffResponse(BaseModel):
-    """Response model for handoff endpoint.
-    
-    Attributes:
-        agent: Name of the agent that handled the question (SearchAgent or LLMAgent)
-        answer: Answer text from the agent
-    """
-    agent: str
-    answer: str
-
-
 @router.post("/handoff", response_model=HandoffResponse)
 async def handoff_question(
     request: HandoffRequest,
-    session: AsyncSession = Depends(get_db_session),
-    kernel: Kernel = Depends(get_ai_kernel),
+    service: HandoffService = Depends(get_handoff_service),
 ):
     """
     Route question to appropriate agent using handoff orchestration.
     
-    Uses HandoffOrchestration to route questions:
-    - Questions containing "film" keyword → SearchAgent (searches database)
-    - Other questions → LLMAgent (uses Semantic Kernel)
-    
-    If SearchAgent finds no match, automatically hands off to LLMAgent.
+    Uses Semantic Kernel's HandoffOrchestration following Microsoft documentation pattern:
+    - Creates orchestration with SearchAgent and LLMAgent
+    - Uses OrchestrationHandoffs configuration for automatic routing
+    - Handles handoffs based on agent responses and descriptions
     
     Args:
         request: Handoff request with question
-        session: Database session (injected)
-        kernel: Semantic Kernel instance (injected)
+        service: Handoff service (injected)
         
     Returns:
         Response with agent name and answer
     """
-    # Create agents
-    film_repository = FilmRepository(session)
-    search_agent = SearchAgent(film_repository, kernel=kernel)
-    llm_agent = LLMAgent(kernel)
-    
-    # Create orchestration with custom routing logic
-    # Uses OrchestrationHandoffs for configuration but custom process() method
-    orchestration = HandoffOrchestration(search_agent, llm_agent)
-    
-    # Process question using custom routing logic
-    result = await orchestration.process(request.question)
-    
-    return HandoffResponse(**result)
+    result = await service.process_question(request.question)
+    return HandoffResponse(agent=result["agent"], answer=result["answer"])

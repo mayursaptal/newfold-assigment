@@ -48,15 +48,9 @@ async def test_get_film_summary(client: AsyncClient):
 async def test_handoff_question(client: AsyncClient):
     """Happy-path: Handoff endpoint routes question to appropriate agent."""
     with patch("app.agents.search_agent.SearchAgent.process") as mock_search, \
-         patch("app.agents.llm_agent.LLMAgent.process") as mock_llm, \
-         patch("app.agents.orchestration.HandoffOrchestration._ai_route_question") as mock_route:
+         patch("app.agents.llm_agent.LLMAgent.process") as mock_llm:
         
-        # Mock AI routing to return SearchAgent
-        mock_route.return_value = {
-            "agent": "SearchAgent",
-            "confidence": 0.9,
-            "reasoning": "Question is about a film"
-        }
+        # Mock SearchAgent to return an answer (orchestration tries it first)
         mock_search.return_value = "Alien (Horror) rents for $2.99."
         
         request_data = {"question": "What is the rental rate for Alien?"}
@@ -66,4 +60,5 @@ async def test_handoff_question(client: AsyncClient):
         data = response.json()
         assert data["agent"] == "SearchAgent"
         assert "answer" in data
+        assert mock_search.called
 

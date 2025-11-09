@@ -21,7 +21,9 @@
 ### API Layer
 - ✅ Film CRUD endpoints
 - ✅ Rental CRUD endpoints
-- ✅ AI endpoints (generate, chat, health)
+- ✅ Category CRUD endpoints
+- ✅ Customer CRUD endpoints
+- ✅ AI endpoints (generate, chat, handoff, health)
 - ✅ API versioning (v1)
 - ✅ OpenAPI documentation
 
@@ -31,8 +33,16 @@
 - ✅ Test client configuration
 - ✅ Example tests for all layers
 
+### AI Agent System
+- ✅ SearchAgent using ChatCompletionAgent with native function plugins
+- ✅ LLMAgent using ChatCompletionAgent with prompt-based plugins
+- ✅ HandoffOrchestration for agent-to-agent routing
+- ✅ FilmSearchPlugin as native function plugin
+- ✅ Plugin loader for automatic plugin registration
+- ✅ OrchestrationHandoffs configuration
+
 ### Documentation
-- ✅ README with setup instructions
+- ✅ README with setup instructions (Docker/Podman and local)
 - ✅ Memory bank documentation
 - ✅ Code documentation (docstrings)
 
@@ -41,11 +51,13 @@
 ### Features
 - [ ] User authentication endpoints (login, register)
 - [ ] More domain models as needed
-- [ ] Advanced AI features with Semantic Kernel
+- [ ] Additional native function plugins for other database operations
+- [ ] Streaming responses for handoff endpoint
 - [ ] File upload/download endpoints
 - [ ] Search and filtering capabilities
 - [ ] Pagination improvements
 - [ ] Caching layer
+- [ ] Fine-tune handoff behavior and agent instructions
 
 ### Infrastructure
 - [ ] Production deployment configuration
@@ -70,45 +82,58 @@
 
 ## Current Status
 
-**Phase**: Initial Setup Complete
+**Phase**: Agent Orchestration Complete
 
-**Status**: ✅ Ready for Development
+**Status**: ✅ Functional AI Agent System
 
-The project foundation is complete. All core infrastructure is in place:
-- Application structure
-- Database setup
-- API endpoints
+The project now has a complete AI agent orchestration system:
+- Application structure with layered architecture
+- Database setup with migrations
+- API endpoints including handoff orchestration
+- AI agents using Semantic Kernel's ChatCompletionAgent
+- Native function plugins for database operations
+- Prompt-based plugins for LLM operations
+- HandoffOrchestration for agent routing
 - Testing framework
 - Documentation
 
 ## Next Milestones
 
-1. **Development Setup** (Next)
-   - Create `.env` file
-   - Start PostgreSQL
-   - Run migrations
-   - Install dependencies
-   - Start application
+1. **Agent System Refinement** (Current)
+   - Fine-tune handoff behavior
+   - Improve agent instructions
+   - Add more comprehensive agent interaction tests
+   - Optimize orchestration performance
 
 2. **Feature Development**
    - Implement authentication
    - Add more domain models
-   - Enhance AI features
-   - Add business logic
+   - Create additional native function plugins
+   - Add streaming responses for handoff endpoint
+   - Add business logic enhancements
 
 3. **Testing & Quality**
-   - Increase test coverage
-   - Add integration tests
+   - Increase test coverage for agent interactions
+   - Add integration tests for orchestration
+   - Add end-to-end tests for handoff scenarios
    - Code quality checks
 
 4. **Production Readiness**
    - Deployment configuration
-   - Monitoring setup
+   - Monitoring setup for agent performance
    - Performance optimization
+   - Error handling improvements
 
 ## Known Issues
 
-None currently. The setup is complete and functional.
+### Handoff Behavior
+- Handoff mechanism relies on AI agent's interpretation of instructions
+- SearchAgent must explicitly request handoff when no film is found
+- May need fine-tuning of agent instructions for optimal handoff behavior
+
+### Plugin Loading
+- Native function plugins must be registered before agent creation
+- Plugin structure must match Semantic Kernel's expected format exactly
 
 ## Blockers
 

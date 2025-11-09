@@ -1,254 +1,245 @@
 """HandoffOrchestration for routing questions to appropriate agents.
 
-This module implements intelligent orchestration using Semantic Kernel to
-analyze questions and route them to the appropriate agent (SearchAgent or LLMAgent).
-
-The orchestration uses an AI-powered routing plugin to intelligently decide
-which agent should handle each question based on the question's intent and content.
+This module uses Semantic Kernel's HandoffOrchestration to route questions
+between SearchAgent and LLMAgent based on OrchestrationHandoffs configuration.
 """
 
-import json
-import re
 from semantic_kernel import Kernel
-from semantic_kernel.agents import OrchestrationHandoffs
-from semantic_kernel.functions import KernelArguments
+from semantic_kernel.agents import HandoffOrchestration as SKHandoffOrchestration, OrchestrationHandoffs
+from semantic_kernel.agents.runtime import InProcessRuntime
+from semantic_kernel.contents import ChatMessageContent, AuthorRole
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.search_agent import SearchAgent
 from app.agents.llm_agent import LLMAgent
+from domain.repositories.film_repository import FilmRepository
 from core.logging import get_logger
-from core.plugin_loader import get_plugin_function
 
 
-class HandoffOrchestration:
-    """Intelligent orchestration agent that routes questions to appropriate agents.
+def create_handoff_orchestration(session: AsyncSession, kernel: Kernel) -> tuple[SKHandoffOrchestration, dict]:
+    """Create a HandoffOrchestration instance following Microsoft documentation pattern.
     
-    This class uses Semantic Kernel with an AI-powered routing plugin to analyze
-    questions and intelligently decide which agent (SearchAgent or LLMAgent) should
-    handle each question. It combines AI-based routing with fallback logic.
+    Creates SearchAgent and LLMAgent, configures handoffs, and returns
+    a Semantic Kernel HandoffOrchestration instance along with a tracking dict
+    to capture the last agent name.
     
-    Attributes:
-        search_agent: SearchAgent instance for film questions
-        llm_agent: LLMAgent instance for general questions
-        kernel: Semantic Kernel instance for AI-powered routing
-        handoffs: OrchestrationHandoffs configuration (for documentation)
-        logger: Logger instance for orchestration
+    Args:
+        session: Database session for SearchAgent's repository
+        kernel: Semantic Kernel instance for both agents
+        
+    Returns:
+        Tuple of (HandoffOrchestration instance, tracking dict with 'last_agent' key)
     """
+    logger = get_logger("ai")  # Use "ai" logger for file logging
     
-    def __init__(self, search_agent: SearchAgent, llm_agent: LLMAgent, kernel: Kernel = None):
-        """Initialize HandoffOrchestration with both agents and kernel.
-        
-        Args:
-            search_agent: SearchAgent instance (front-desk agent)
-            llm_agent: LLMAgent instance (fallback agent)
-            kernel: Semantic Kernel instance for AI-powered routing (optional)
-        """
-        self.search_agent = search_agent
-        self.llm_agent = llm_agent
-        self.kernel = kernel or search_agent.kernel or llm_agent.kernel
-        self.logger = get_logger(__name__)
-        
-        # Build OrchestrationHandoffs configuration for documentation
-        self.handoffs = (
-            OrchestrationHandoffs()
-            .add(
-                source_agent=search_agent.name,
-                target_agent=llm_agent.name,
-                description="Transfer to this agent if the question is not film-related or no film match is found"
-            )
-            .add(
-                source_agent=llm_agent.name,
-                target_agent=search_agent.name,
-                description="Transfer to this agent if the question is film-related"
+    # Create repository and agents
+    film_repository = FilmRepository(session)
+    search_agent_wrapper = SearchAgent(film_repository, kernel=kernel)
+    llm_agent_wrapper = LLMAgent(kernel)
+    
+    # Extract the underlying ChatCompletionAgent instances
+    search_agent = search_agent_wrapper.agent
+    llm_agent = llm_agent_wrapper.agent
+    
+    # Build OrchestrationHandoffs configuration following Microsoft pattern
+    # Make handoff descriptions very explicit so agents know when to hand off
+    # SearchAgent can hand off to LLMAgent, but LLMAgent should NOT hand off back to SearchAgent
+    handoffs = (
+        OrchestrationHandoffs()
+        .add(
+            source_agent=search_agent.name,
+            target_agent=llm_agent.name,
+            description=(
+                "ONLY transfer to LLMAgent if ANY of these conditions are true: "
+                "(1) The user's question is NOT about a film, movie, or cinema (e.g., personal questions, general knowledge, other topics), "
+                "(2) The search_film function returns None/null/empty, "
+                "(3) No film match is found in the database. "
+                "\n\n"
+                "DO NOT transfer to LLMAgent if you successfully found and provided film information. "
+                "When you find a film and provide its details, END the conversation - do not hand off. "
+                "Only hand off when you cannot handle the request yourself."
             )
         )
-        
+        .add(
+            source_agent=llm_agent.name,
+            target_agent=search_agent.name,
+            description=(
+                "DO NOT transfer to SearchAgent. "
+                "LLMAgent should ANSWER QUESTIONS directly and conversationally. "
+                "Simply answer the user's question directly, no matter what it is."
+            )
+        )
+    )
     
-    async def _ai_route_question(self, question: str) -> dict:
-        """
-        Use AI to analyze question and determine which agent should handle it.
+    # Track last agent name and conversation state in a dict (mutable, accessible from callbacks)
+    agent_tracker = {
+        "last_agent": search_agent.name,
+        "response_received": False,
+        "human_response_calls": 0,
+        "last_agent_response": None,  # Store the actual agent response content
+        "should_stop": False  # Flag to signal orchestration should stop
+    }
+    
+    # Create response callback to track agent responses and last agent
+    def agent_response_callback(message: ChatMessageContent) -> None:
+        """Callback to log agent responses and track last agent."""
+        agent_name = message.name or "Unknown"
+        previous_agent = agent_tracker.get("last_agent", "Unknown")
+        agent_tracker["last_agent"] = agent_name
         
-        Args:
-            question: User's question
+        # Extract content from message - try multiple ways
+        content = None
+        
+        # First try direct content attribute
+        if hasattr(message, 'content') and message.content:
+            content = str(message.content).strip()
+        
+        # Try text attribute
+        if not content and hasattr(message, 'text') and message.text:
+            content = str(message.text).strip()
+        
+        # Try items attribute (ChatMessageContent may have items)
+        if not content:
+            items = None
+            if hasattr(message, 'items'):
+                items = message.items
+            elif hasattr(message, '__getitem__'):
+                # Try to access as dict/list
+                try:
+                    if 'items' in message:
+                        items = message['items']
+                except (TypeError, KeyError):
+                    pass
             
-        Returns:
-            Dictionary with routing decision:
-            {"agent": "SearchAgent" | "LLMAgent", "confidence": float, "reasoning": str}
-        """
-        try:
-            # Get routing function (auto-registered at kernel initialization)
-            route_function = get_plugin_function(
-                self.kernel,
-                plugin_name="orchestration",
-                function_name="route_question"
-            )
-            
-            # Invoke routing function
-            arguments = KernelArguments(question=question)
-            response = await self.kernel.invoke(
-                function=route_function,
-                arguments=arguments
-            )
-            
-            # Extract response content
-            response_text = ""
-            if hasattr(response, 'value'):
-                response_value = response.value
-                
-                # Handle list responses
-                if isinstance(response_value, list):
-                    for item in response_value:
-                        if hasattr(item, 'content') and item.content:
-                            response_text = str(item.content)
+            if items:
+                # Handle both list and iterable
+                try:
+                    for item in items:
+                        if hasattr(item, 'text') and item.text:
+                            content = str(item.text).strip()
                             break
-                        elif hasattr(item, 'inner_content'):
-                            inner = item.inner_content
-                            if hasattr(inner, 'choices') and inner.choices:
-                                choice = inner.choices[0]
-                                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
-                                    response_text = str(choice.message.content)
-                                    break
-                # Handle single object
-                else:
-                    if hasattr(response_value, 'content') and response_value.content:
-                        response_text = str(response_value.content)
-                    elif hasattr(response_value, 'inner_content'):
-                        inner = response_value.inner_content
-                        if hasattr(inner, 'choices') and inner.choices:
-                            choice = inner.choices[0]
-                            if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
-                                response_text = str(choice.message.content)
+                        elif hasattr(item, 'content') and item.content:
+                            content = str(item.content).strip()
+                            break
+                        elif isinstance(item, dict) and 'text' in item:
+                            content = str(item['text']).strip()
+                            break
+                        elif isinstance(item, dict) and 'content' in item:
+                            content = str(item['content']).strip()
+                            break
+                except (TypeError, AttributeError):
+                    pass
+        
+        # Store the actual agent response content (only for assistant role messages with content)
+        role_is_assistant = (
+            (hasattr(message, 'role') and
+             (hasattr(message.role, 'value') and message.role.value == "assistant" or str(message.role) == "assistant"))
+        )
+        
+        if (role_is_assistant and
+            content and
+            content.strip() and
+            not content.startswith("Task is completed") and
+            not content.startswith("__CONVERSATION_COMPLETE__") and
+            not content.startswith("Handoff-") and
+            not "Handoff-complete_task" in content):
             
-            # Clean up response text
-            response_text = response_text.strip()
-            
-            # Remove markdown code blocks if present
-            if response_text.startswith("```json"):
-                response_text = response_text[7:].strip()
-            elif response_text.startswith("```"):
-                response_text = response_text[3:].strip()
-            
-            if response_text.endswith("```"):
-                response_text = response_text[:-3].strip()
-            
-            # Try to extract JSON from the response
-            json_match = re.search(r'\{[^{}]*"agent"[^{}]*\}', response_text, re.DOTALL)
-            if json_match:
-                response_text = json_match.group(0)
-            
-            # Parse JSON
-            routing_decision = json.loads(response_text)
-            
-            # Validate agent name
-            agent = routing_decision.get("agent", "").strip()
-            if agent not in ["SearchAgent", "LLMAgent"]:
-                self.logger.warning("Invalid agent name from AI routing",
-                                  agent=agent,
-                                  defaulting_to="LLMAgent")
-                return None
-            
-            self.logger.info("AI routing decision",
-                           agent=agent,
-                           confidence=routing_decision.get("confidence", 0.0),
-                           reasoning=routing_decision.get("reasoning", ""))
-            
-            return routing_decision
-            
-        except Exception as e:
-            self.logger.warning("AI routing failed, will use fallback logic",
-                              error=str(e),
-                              error_type=type(e).__name__)
-            return None
+            # Only store the FIRST valid response - don't overwrite if we already have one
+            if not agent_tracker.get("last_agent_response"):
+                agent_tracker["last_agent_response"] = content
+                agent_tracker["response_received"] = True  # Mark that we've received a valid response
+                agent_tracker["should_stop"] = True  # Signal that orchestration should stop
+                
+                logger.info(
+                    "Stored agent response in tracker",
+                    agent_name=agent_name,
+                    content_length=len(content),
+                    content_preview=content[:200]
+                )
+            else:
+                logger.info(
+                    "Ignoring additional agent response (already have first response)",
+                    agent_name=agent_name,
+                    content_length=len(content),
+                    content_preview=content[:200]
+                )
+        
+        # Log handoff if agent changed
+        if previous_agent != agent_name:
+            logger.info(
+                "Agent handoff",
+                from_agent=previous_agent,
+                to_agent=agent_name,
+                message_content=content[:500] if content else ""
+            )
+        
+        # Log agent response with extracted content and debug info
+        message_attrs = [attr for attr in dir(message) if not attr.startswith('_')]
+        logger.info(
+            "Agent response",
+            agent_name=agent_name,
+            role=message.role.value if hasattr(message.role, 'value') else str(message.role),
+            content_length=len(content) if content else 0,
+            content_preview=content[:500] if content else "",
+            has_content=bool(content),
+            message_has_content=bool(hasattr(message, 'content') and message.content),
+            message_has_text=bool(hasattr(message, 'text') and message.text),
+            message_has_items=bool(hasattr(message, 'items')),
+            message_type=type(message).__name__,
+            message_attrs_sample=message_attrs[:10] if message_attrs else []
+        )
+        
+        # If no content extracted, try to get it from message directly
+        if not content and hasattr(message, '__dict__'):
+            logger.warning(
+                "No content extracted, checking message __dict__",
+                message_dict_keys=list(message.__dict__.keys())[:10] if hasattr(message, '__dict__') else []
+            )
     
-    def _fallback_route_question(self, question: str) -> str:
+    # Create human response function for orchestration
+    def human_response_function() -> ChatMessageContent:
+        """Human response function for orchestration.
+        
+        In API context, the initial question is provided via the 'task' parameter.
+        This function should NOT be called repeatedly after agents provide responses.
         """
-        Fallback routing logic when AI routing is unavailable.
+        call_count = agent_tracker.get("human_response_calls", 0)
+        agent_tracker["human_response_calls"] = call_count + 1
         
-        Uses simple heuristics to determine routing.
+        logger.debug(
+            "Human response function called",
+            call_count=call_count + 1
+        )
         
-        Args:
-            question: User's question
-            
-        Returns:
-            Agent name: "SearchAgent" or "LLMAgent"
-        """
-        question_lower = question.lower()
-        contains_film_keyword = "film" in question_lower or "movie" in question_lower
+        # After the first call, we should not provide more input
+        # The orchestration should terminate after agents provide their responses
+        if call_count > 0:
+            logger.warning(
+                "Human response function called multiple times - orchestration should have terminated",
+                call_count=call_count + 1
+            )
+            # Return a special termination signal
+            return ChatMessageContent(role=AuthorRole.USER, content="__TERMINATE_CONVERSATION__")
         
-        # Check for capitalized words (potential film titles)
-        words = question.split()
-        capitalized_words = [w for w in words if w and w[0].isupper() and len(w) > 2]
-        might_be_film_question = contains_film_keyword or len(capitalized_words) >= 1
-        
-        if might_be_film_question:
-            return "SearchAgent"
-        return "LLMAgent"
+        # First call - return empty to let orchestration use the 'task' parameter
+        return ChatMessageContent(role=AuthorRole.USER, content="")
     
-    async def process(self, question: str) -> dict:
-        """
-        Process a question and intelligently route it to the appropriate agent.
-        
-        Uses AI-powered routing to analyze the question and determine which agent
-        should handle it. Falls back to heuristic-based routing if AI routing fails.
-        
-        Routing logic:
-        1. Use AI-powered routing plugin to analyze question intent
-        2. If AI routing succeeds, use the recommended agent
-        3. If AI routing fails, use fallback heuristics
-        4. Try SearchAgent first if routed to it
-        5. If SearchAgent finds no match, hand off to LLMAgent
-        6. If routed to LLMAgent, use it directly
-        
-        Args:
-            question: User's question
-            
-        Returns:
-            Dictionary with agent name and answer:
-            {"agent": "SearchAgent" | "LLMAgent", "answer": str}
-        """
-        self.logger.info("HandoffOrchestration processing question", question=question[:100])
-        
-        # Try AI-powered routing first
-        routing_decision = await self._ai_route_question(question)
-        
-        # Determine which agent to use
-        if routing_decision:
-            selected_agent = routing_decision.get("agent", "LLMAgent")
-            confidence = routing_decision.get("confidence", 0.0)
-            reasoning = routing_decision.get("reasoning", "")
-            
-            self.logger.info("AI routing selected agent",
-                           agent=selected_agent,
-                           confidence=confidence,
-                           reasoning=reasoning)
-        else:
-            # Use fallback routing
-            selected_agent = self._fallback_route_question(question)
-            self.logger.info("Using fallback routing", agent=selected_agent)
-        
-        # Route to SearchAgent
-        if selected_agent == "SearchAgent":
-            self.logger.info("Routing to SearchAgent")
-            answer = await self.search_agent.process(question)
-            
-            # If SearchAgent found a match, return its answer
-            if answer:
-                self.logger.info("SearchAgent found match", answer=answer[:100])
-                return {
-                    "agent": "SearchAgent",
-                    "answer": answer
-                }
-            
-            # If no match found, hand off to LLMAgent
-            self.logger.info("SearchAgent found no match, handing off to LLMAgent")
-            answer = await self.llm_agent.process(question)
-            return {
-                "agent": "LLMAgent",
-                "answer": answer
-            }
-        
-        # Route to LLMAgent
-        self.logger.info("Routing to LLMAgent")
-        answer = await self.llm_agent.process(question)
-        return {
-            "agent": "LLMAgent",
-            "answer": answer
+    # Create HandoffOrchestration following Microsoft documentation pattern
+    # Put SearchAgent first in members list as it's the front-desk agent
+    orchestration = SKHandoffOrchestration(
+        members=[search_agent, llm_agent],  # First agent is typically the starting agent
+        handoffs=handoffs,
+        agent_response_callback=agent_response_callback,
+        human_response_function=human_response_function,
+    )
+    
+    logger.info(
+        "HandoffOrchestration created",
+        agents=[search_agent.name, llm_agent.name],
+        starting_agent=search_agent.name,
+        handoff_rules={
+            f"{search_agent.name} -> {llm_agent.name}": "Film not found or non-film question",
+            f"{llm_agent.name} -> {search_agent.name}": "DO NOT transfer (LLMAgent handles directly)"
         }
+    )
+    
+    return orchestration, agent_tracker
