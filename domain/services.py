@@ -154,18 +154,20 @@ class RentalService:
         self,
         skip: int = 0,
         limit: int = 100,
+        customer_id: Optional[int] = None,
     ) -> List[RentalRead]:
         """
-        Get all rentals with pagination.
+        Get all rentals with pagination and optional customer filter.
         
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
+            customer_id: Optional customer ID to filter by
             
         Returns:
             List of rentals
         """
-        rentals = await self.repository.get_all(skip=skip, limit=limit)
+        rentals = await self.repository.get_all(skip=skip, limit=limit, customer_id=customer_id)
         return [RentalRead.model_validate(rental) for rental in rentals]
     
     async def update_rental(

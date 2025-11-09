@@ -364,35 +364,57 @@ class RentalRepository:
         self,
         skip: int = 0,
         limit: int = 100,
+        customer_id: Optional[int] = None,
     ) -> List[Rental]:
         """
-        Get all rentals with pagination.
+        Get all rentals with pagination and optional customer filter.
         
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
+            customer_id: Optional customer ID to filter by
             
         Returns:
             List of rental entities
         """
         # Use raw SQL to match Pagila schema
-        sql_query = text("""
-            SELECT 
-                rental.rental_id as id,
-                rental.inventory_id,
-                rental.customer_id,
-                rental.staff_id,
-                rental.rental_date,
-                rental.return_date,
-                rental.last_update
-            FROM rental
-            ORDER BY rental.rental_id
-            LIMIT :limit OFFSET :skip
-        """)
-        result = await self.session.execute(
-            sql_query,
-            {"limit": limit, "skip": skip}
-        )
+        if customer_id:
+            sql_query = text("""
+                SELECT 
+                    rental.rental_id as id,
+                    rental.inventory_id,
+                    rental.customer_id,
+                    rental.staff_id,
+                    rental.rental_date,
+                    rental.return_date,
+                    rental.last_update
+                FROM rental
+                WHERE rental.customer_id = :customer_id
+                ORDER BY rental.rental_id DESC
+                LIMIT :limit OFFSET :skip
+            """)
+            result = await self.session.execute(
+                sql_query,
+                {"customer_id": customer_id, "limit": limit, "skip": skip}
+            )
+        else:
+            sql_query = text("""
+                SELECT 
+                    rental.rental_id as id,
+                    rental.inventory_id,
+                    rental.customer_id,
+                    rental.staff_id,
+                    rental.rental_date,
+                    rental.return_date,
+                    rental.last_update
+                FROM rental
+                ORDER BY rental.rental_id
+                LIMIT :limit OFFSET :skip
+            """)
+            result = await self.session.execute(
+                sql_query,
+                {"limit": limit, "skip": skip}
+            )
         rows = result.fetchall()
         rentals = []
         for row in rows:

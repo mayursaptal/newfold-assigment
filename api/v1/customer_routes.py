@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from domain.services import RentalService
 from domain.models import RentalRead
 from core.dependencies import get_rental_service
@@ -17,6 +17,29 @@ class RentalCreateRequest(BaseModel):
     inventory_id: int
     staff_id: int
     rental_date: Optional[datetime] = None  # Will default to now() if not provided
+
+
+@router.get("/{customer_id}/rentals", response_model=List[RentalRead])
+async def get_customer_rentals(
+    customer_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    service: RentalService = Depends(get_rental_service),
+):
+    """
+    Get all rentals for a specific customer with pagination.
+    
+    Args:
+        customer_id: Customer ID
+        skip: Number of records to skip (default: 0)
+        limit: Maximum number of records to return (default: 100)
+        service: Rental service (injected)
+        
+    Returns:
+        List of customer rentals
+    """
+    rentals = await service.get_rentals(skip=skip, limit=limit, customer_id=customer_id)
+    return rentals
 
 
 @router.post("/{customer_id}/rentals", response_model=RentalRead, status_code=status.HTTP_201_CREATED)
