@@ -21,7 +21,9 @@ Example:
 """
 
 import pytest
+import sqlite3
 from typing import AsyncGenerator
+from datetime import datetime
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlmodel import SQLModel
@@ -29,6 +31,20 @@ from fastapi.testclient import TestClient
 from app.main import app
 from core.dependencies import get_db_session
 
+
+# Configure SQLite datetime adapters to avoid deprecation warnings
+def adapt_datetime_iso(val: datetime) -> str:
+    """Adapt datetime to ISO string format."""
+    return val.isoformat()
+
+
+def convert_datetime(val: bytes) -> datetime:
+    """Convert ISO string back to datetime."""
+    return datetime.fromisoformat(val.decode())
+
+
+# Register the adapters
+sqlite3.register_adapter(type(None), lambda x: None)
 
 # Test database URL (use in-memory SQLite for testing)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -83,7 +99,8 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_db_session] = override_get_db
 
-    transport = ASGITransport(app=app)
+    # Use the app directly as ASGI application
+    transport = ASGITransport(app=app)  # type: ignore[arg-type]
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 

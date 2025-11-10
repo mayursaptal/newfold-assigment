@@ -160,13 +160,12 @@ def create_handoff_orchestration(
             and not content.startswith("Handoff-")
             and "Handoff-complete_task" not in content
         ):
-
             # Only store the FIRST valid response - don't overwrite if we already have one
             if not agent_tracker.get("last_agent_response"):
                 agent_tracker["last_agent_response"] = content
-                agent_tracker["response_received"] = (
-                    True  # Mark that we've received a valid response
-                )
+                agent_tracker[
+                    "response_received"
+                ] = True  # Mark that we've received a valid response
                 agent_tracker["should_stop"] = True  # Signal that orchestration should stop
 
                 logger.info(

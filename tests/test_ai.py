@@ -46,7 +46,6 @@ async def test_get_film_summary(client: AsyncClient) -> None:
 async def test_handoff_question(client: AsyncClient) -> None:
     """Happy-path: Handoff endpoint routes question to appropriate agent."""
     with patch("domain.services.handoff_service.HandoffService.process_question") as mock_handoff:
-
         # Mock HandoffService to return a response
         mock_handoff.return_value = {
             "agent": "SearchAgent",
