@@ -100,7 +100,7 @@ async def get_films(
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
-        category: Optional category name to filter by (?category=Action)
+        category: Optional category name to filter by (case insensitive, supports partial matching, e.g. ?category=action)
         service: Film service (injected)
 
     Returns:

@@ -142,7 +142,7 @@ class FilmRepository:
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
-            category: Optional category name to filter by
+            category: Optional category name to filter by (case insensitive, supports partial matching)
 
         Returns:
             List of film entities
@@ -169,13 +169,15 @@ class FilmRepository:
                 FROM film
                 INNER JOIN film_category ON film.film_id = film_category.film_id
                 INNER JOIN category ON film_category.category_id = category.category_id
-                WHERE category.name = :category_name
+                WHERE category.name ILIKE :category_name
                 ORDER BY film.film_id
                 LIMIT :limit OFFSET :skip
             """
             )
+            # Add wildcards for LIKE query to enable partial matching
+            category_pattern = f"%%{category}%%"
             result = await self.session.execute(
-                sql_query, {"category_name": category, "limit": limit, "skip": skip}
+                sql_query, {"category_name": category_pattern, "limit": limit, "skip": skip}
             )
             # Map results to Film objects
             rows = result.fetchall()

@@ -77,7 +77,7 @@ class FilmService:
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
-            category: Optional category name to filter by
+            category: Optional category name to filter by (case insensitive, supports partial matching)
 
         Returns:
             List of films
