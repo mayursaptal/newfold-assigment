@@ -112,12 +112,11 @@ cp .env.example .env
 # Edit .env with your configuration
 
 # Start services
-cd docker
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 
 # Check status
-docker-compose ps
-docker-compose logs -f fastapi
+docker-compose -f docker/docker-compose.yml ps
+docker-compose -f docker/docker-compose.yml logs -f fastapi
 ```
 
 ### Production Deployment
@@ -128,7 +127,7 @@ export DATABASE_URL=postgresql+asyncpg://user:pass@prod-db:5432/interview_db
 export OPENAI_API_KEY=your_production_key
 
 # Deploy with production settings
-docker-compose -f docker-compose.yml up -d --build
+docker-compose -f docker/docker-compose.yml up -d --build
 ```
 
 ## 🔧 Docker Compose Configuration
@@ -244,13 +243,13 @@ services:
 ### Debug Mode Options
 ```bash
 # Option 1: No wait (app starts immediately)
-DEBUG_MODE=true DEBUG_WAIT=false docker-compose up --build
+DEBUG_MODE=true DEBUG_WAIT=false docker-compose -f docker/docker-compose.yml up --build
 
 # Option 2: Wait for debugger
-DEBUG_MODE=true DEBUG_WAIT=true docker-compose up --build
+DEBUG_MODE=true DEBUG_WAIT=true docker-compose -f docker/docker-compose.yml up --build
 
 # Option 3: Custom debug port
-DEBUG_MODE=true DEBUG_PORT=9999 docker-compose up --build
+DEBUG_MODE=true DEBUG_PORT=9999 docker-compose -f docker/docker-compose.yml up --build
 ```
 
 ### Debugger Connection
@@ -266,7 +265,7 @@ telnet localhost 5678
 ### Debug Logs
 ```bash
 # Monitor debug startup
-docker-compose logs -f fastapi
+docker-compose -f docker/docker-compose.yml logs -f fastapi
 
 # Expected output:
 # 🐛 Starting FastAPI with debugger support...
@@ -281,25 +280,25 @@ docker-compose logs -f fastapi
 ### Basic Commands
 ```bash
 # Start services
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 
 # Stop services
-docker-compose down
+docker-compose -f docker/docker-compose.yml down
 
 # Rebuild and start
-docker-compose up --build -d
+docker-compose -f docker/docker-compose.yml up --build -d
 
 # View logs
-docker-compose logs -f
-docker-compose logs -f fastapi
-docker-compose logs -f postgres
+docker-compose -f docker/docker-compose.yml logs -f
+docker-compose -f docker/docker-compose.yml logs -f fastapi
+docker-compose -f docker/docker-compose.yml logs -f postgres
 
 # Check status
-docker-compose ps
+docker-compose -f docker/docker-compose.yml ps
 
 # Execute commands in container
-docker-compose exec fastapi bash
-docker-compose exec postgres psql -U postgres -d interview_db
+docker-compose -f docker/docker-compose.yml exec fastapi bash
+docker-compose -f docker/docker-compose.yml exec postgres psql -U postgres -d interview_db
 ```
 
 ### Container Inspection
@@ -311,7 +310,7 @@ docker inspect interview_fastapi
 docker stats interview_fastapi interview_postgres
 
 # View container processes
-docker-compose top
+docker-compose -f docker/docker-compose.yml top
 
 # Check networks
 docker network ls
@@ -330,14 +329,14 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ### Health Check Commands
 ```bash
 # Check container health
-docker-compose ps
+docker-compose -f docker/docker-compose.yml ps
 docker inspect --format='{{.State.Health.Status}}' interview_fastapi
 
 # Manual health check
 curl http://localhost:8000/health
 
 # Database health check
-docker-compose exec postgres pg_isready -U postgres
+docker-compose -f docker/docker-compose.yml exec postgres pg_isready -U postgres
 ```
 
 ### Monitoring Scripts
@@ -357,7 +356,7 @@ else
 fi
 
 # Check database connectivity
-if docker-compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+if docker-compose -f docker/docker-compose.yml exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
     echo "✅ PostgreSQL is healthy"
 else
     echo "❌ PostgreSQL is unhealthy"
@@ -474,24 +473,24 @@ postgres:
 ### Database Backup
 ```bash
 # Create backup
-docker-compose exec postgres pg_dump -U postgres interview_db > backup.sql
+docker-compose -f docker/docker-compose.yml exec postgres pg_dump -U postgres interview_db > backup.sql
 
 # Automated backup script
 #!/bin/bash
 BACKUP_DIR="/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
-docker-compose exec -T postgres pg_dump -U postgres interview_db > "${BACKUP_DIR}/interview_db_${DATE}.sql"
+docker-compose -f docker/docker-compose.yml exec -T postgres pg_dump -U postgres interview_db > "${BACKUP_DIR}/interview_db_${DATE}.sql"
 gzip "${BACKUP_DIR}/interview_db_${DATE}.sql"
 ```
 
 ### Database Restore
 ```bash
 # Restore from backup
-docker-compose exec -T postgres psql -U postgres interview_db < backup.sql
+docker-compose -f docker/docker-compose.yml exec -T postgres psql -U postgres interview_db < backup.sql
 
 # Or using docker cp
 docker cp backup.sql interview_postgres:/tmp/
-docker-compose exec postgres psql -U postgres interview_db -f /tmp/backup.sql
+docker-compose -f docker/docker-compose.yml exec postgres psql -U postgres interview_db -f /tmp/backup.sql
 ```
 
 ### Volume Backup

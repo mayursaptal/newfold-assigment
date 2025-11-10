@@ -1,6 +1,6 @@
-"""AI API routes using Azure OpenAI.
+"""AI API routes using OpenAI.
 
-This module defines FastAPI routes for AI-powered endpoints using Azure OpenAI.
+This module defines FastAPI routes for AI-powered endpoints using OpenAI.
 It provides endpoints for chat completions and film summaries.
 
 Endpoints:

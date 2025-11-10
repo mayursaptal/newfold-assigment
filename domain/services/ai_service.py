@@ -1,7 +1,7 @@
-"""AI service for Azure OpenAI operations.
+"""AI service for OpenAI operations.
 
 This module provides the AIService class which handles AI operations using
-Azure OpenAI via the Semantic Kernel. It provides methods for
+OpenAI via the Semantic Kernel. It provides methods for
 streaming chat completions and generating structured film summaries.
 
 Example:

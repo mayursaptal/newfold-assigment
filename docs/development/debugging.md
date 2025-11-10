@@ -409,7 +409,7 @@ docker-compose exec fastapi env | grep DATABASE_URL
 ### Debug Port Conflicts
 ```bash
 # If port 5678 is in use, change debug port
-DEBUG_PORT=9999 docker-compose up --build
+DEBUG_PORT=9999 docker-compose -f docker/docker-compose.yml up --build
 
 # Update IDE configuration to match new port
 ```

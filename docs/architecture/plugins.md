@@ -491,7 +491,7 @@ class Settings(BaseSettings):
     
     # AI settings
     openai_api_key: str
-    openai_model: str = "gpt-4"
+    openai_model: str = "gpt-4o"
     max_tokens: int = 1000
     temperature: float = 0.7
 ```

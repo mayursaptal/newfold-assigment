@@ -169,7 +169,8 @@ orchestration = HandoffOrchestration(agents=[search_agent, llm_agent])
 **Purpose**: AI language model services
 
 **Supported Models**:
-- GPT-4 (default)
+- GPT-4o (default)
+- GPT-4
 - GPT-3.5-turbo
 - Custom fine-tuned models
 
@@ -178,7 +179,7 @@ orchestration = HandoffOrchestration(agents=[search_agent, llm_agent])
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
 
 service = OpenAIChatCompletion(
-    ai_model_id="gpt-4",
+    ai_model_id="gpt-4o",
     api_key=settings.openai_api_key,
     org_id=settings.openai_org_id
 )
@@ -438,13 +439,12 @@ repos:
 - Variable inspection
 
 **Docker Integration**:
-```python
-# In Docker entrypoint
-if DEBUG_MODE:
-    import debugpy
-    debugpy.listen(("0.0.0.0", 5678))
-    if DEBUG_WAIT:
-        debugpy.wait_for_client()
+```bash
+# Start with debugger using Docker
+DEBUG_MODE=true DEBUG_WAIT=true docker-compose -f docker/docker-compose.yml up --build
+
+# Or use tasks in VS Code/Cursor
+# Task: docker-up-debug-wait
 ```
 
 ## 🐳 Containerization

@@ -34,7 +34,7 @@ Edit `.env` file with your settings:
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Database settings (defaults work for Docker)
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/interview_db
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/interview_db
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=interview_db
@@ -42,13 +42,12 @@ POSTGRES_DB=interview_db
 # Application settings
 DEBUG=True
 LOG_LEVEL=INFO
-SECRET_KEY=your-secret-key-change-in-production
+SECRET_KEY=your-secret-key-change-in-production-change-in-production
 ```
 
 ### 3. Start with Docker (Recommended)
 ```bash
-cd docker
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 
 # Wait for services to start (about 30 seconds)
 # Check status
@@ -103,8 +102,7 @@ cp .env.example .env
 # Edit .env with your OpenAI API key
 
 # 4. Start services
-cd docker
-docker-compose up -d
+docker-compose -f docker/docker-compose.yml up -d
 
 # 5. Check logs (optional)
 docker-compose logs -f
@@ -138,8 +136,7 @@ brew install postgresql  # macOS
 sudo apt install postgresql  # Ubuntu
 
 # Option B: Docker PostgreSQL only
-cd docker
-docker-compose up postgres -d
+docker-compose -f docker/docker-compose.yml up postgres -d
 ```
 
 #### Step-by-Step
@@ -219,8 +216,8 @@ After setup, your database will contain:
 
 2. **Configure in .env**:
    ```bash
-   OPENAI_API_KEY=sk-your-actual-api-key-here
-   OPENAI_MODEL=gpt-4  # or gpt-3.5-turbo
+   OPENAI_API_KEY=your-openai-api-key-here
+   OPENAI_MODEL=gpt-4o
    ```
 
 3. **Verify Configuration**:
@@ -285,7 +282,7 @@ psql interview_db -c "SELECT title FROM film LIMIT 5;"
 ### Enable Debug Mode
 ```bash
 # Start with debugging enabled
-DEBUG_MODE=true DEBUG_WAIT=false docker-compose up --build
+DEBUG_MODE=true DEBUG_WAIT=false docker-compose -f docker/docker-compose.yml up --build
 
 # Connect debugger to localhost:5678
 ```
@@ -348,15 +345,15 @@ POSTGRES_PORT=5432
 # Application
 DEBUG=True
 LOG_LEVEL=INFO
-SECRET_KEY=your-secret-key
+SECRET_KEY=your-secret-key-change-in-production
 API_V1_PREFIX=/api/v1
 HOST=0.0.0.0
 PORT=8000
 
 # AI Configuration
-OPENAI_API_KEY=sk-your-key
-OPENAI_MODEL=gpt-4
-OPENAI_ORG_ID=your-org-id  # Optional
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_MODEL=gpt-4o
+OPENAI_ORG_ID=your-org-id-here
 
 # Debug Configuration
 DEBUG_MODE=false

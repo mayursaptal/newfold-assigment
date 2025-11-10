@@ -45,7 +45,7 @@ class Settings(BaseSettings):
         secret_key: Secret key for JWT token signing
         api_v1_prefix: API version 1 URL prefix
         openai_api_key: OpenAI API key
-        openai_model: OpenAI model name (e.g., gpt-4, gpt-3.5-turbo)
+        openai_model: OpenAI model name (e.g., gpt-4o, gpt-4, gpt-3.5-turbo)
         openai_org_id: OpenAI organization ID (optional)
         host: Server host address
         port: Server port number
@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     # AI Configuration (OpenAI)
     openai_api_key: Optional[str] = None
-    openai_model: str = "gpt-4"
+    openai_model: str = "gpt-4o"
     openai_org_id: Optional[str] = None
 
     # Server Configuration

@@ -249,7 +249,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Database settings
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/interview_db"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/interview_db"
     postgres_user: str = "postgres"
     postgres_password: str = "postgres"
     postgres_db: str = "interview_db"
