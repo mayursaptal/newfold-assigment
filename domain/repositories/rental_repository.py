@@ -54,10 +54,11 @@ class RentalRepository:
         Returns:
             Created rental entity
         """
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         # Set rental_date to now() if not provided
-        rental_date = rental.rental_date or datetime.utcnow()
+        # Use timezone-aware datetime with microseconds to reduce collision probability
+        rental_date = rental.rental_date or datetime.now(timezone.utc)
 
         # Use raw SQL to insert rental to avoid SQLModel foreign key resolution issues
         sql_query = text(

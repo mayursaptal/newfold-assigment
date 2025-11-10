@@ -24,6 +24,8 @@ Example:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
+from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
 from domain.schemas import RentalCreate, RentalUpdate, RentalRead
 from domain.services import RentalService
 from core.dependencies import get_rental_service
@@ -45,8 +47,59 @@ async def create_rental(
 
     Returns:
         Created rental
+
+    Raises:
+        HTTPException: 400 if validation fails or database constraint is violated
+        HTTPException: 500 if an unexpected error occurs
     """
-    return await service.create_rental(rental)
+    try:
+        return await service.create_rental(rental)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Validation error: {str(e)}"
+        )
+    except IntegrityError as e:
+        # Handle database constraint violations
+        error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+        if (
+            "idx_unq_rental_rental_date_inventory_id_customer_id" in error_msg
+            or "duplicate key value" in error_msg
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This rental already exists. The same customer cannot rent the same item at the same time.",
+            )
+        elif "foreign key constraint" in error_msg.lower():
+            if "inventory_id" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid inventory_id: the specified inventory item does not exist",
+                )
+            elif "customer_id" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid customer_id: the specified customer does not exist",
+                )
+            elif "staff_id" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid staff_id: the specified staff member does not exist",
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid reference: one or more referenced entities do not exist",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data integrity error: the provided data violates database constraints",
+            )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while creating the rental",
+        )
 
 
 @router.get("/", response_model=List[RentalRead])
