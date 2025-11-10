@@ -100,7 +100,7 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides[get_db_session] = override_get_db
 
     # Use the app directly as ASGI application
-    transport = ASGITransport(app=app)  # type: ignore
+    transport = ASGITransport(app=app)  # type: ignore[arg-type]
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
