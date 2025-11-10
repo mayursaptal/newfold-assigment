@@ -58,16 +58,17 @@ def create_kernel(
         # Add OpenAI chat completion service to kernel
         # Don't specify service_id - it will use model name as service_id by default
         # This ensures functions can find the service automatically
-        service_kwargs = {
-            "ai_model_id": model,
-            "api_key": api_key,
-        }
-        
-        # Add org_id if provided
         if org_id:
-            service_kwargs["org_id"] = org_id
-        
-        openai_chat_service = OpenAIChatCompletion(**service_kwargs)
+            openai_chat_service = OpenAIChatCompletion(
+                ai_model_id=model,
+                api_key=api_key,
+                org_id=org_id
+            )
+        else:
+            openai_chat_service = OpenAIChatCompletion(
+                ai_model_id=model,
+                api_key=api_key
+            )
         
         kernel.add_service(openai_chat_service)
         

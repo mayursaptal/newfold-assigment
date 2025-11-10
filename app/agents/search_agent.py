@@ -4,6 +4,7 @@ This agent uses ChatCompletionAgent with native function plugins to let the AI
 handle film searches, title extraction, and response formatting automatically.
 """
 
+from typing import Optional
 from semantic_kernel import Kernel
 from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.functions import KernelArguments
@@ -27,7 +28,7 @@ class SearchAgent:
         description: Agent description (required for HandoffOrchestration)
     """
     
-    def __init__(self, repository: FilmRepository, kernel: Kernel = None):
+    def __init__(self, repository: FilmRepository, kernel: Optional[Kernel] = None):
         """Initialize SearchAgent with repository and kernel.
         
         Args:
@@ -88,7 +89,6 @@ class SearchAgent:
             kernel=kernel,
             name=self.name,
             instructions=default_instructions,
-            arguments=KernelArguments(),
-            plugins=plugins if plugins else None
+            arguments=KernelArguments()
         )
 

@@ -21,6 +21,7 @@ Example:
 """
 
 import pytest
+from typing import AsyncGenerator
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlmodel import SQLModel
@@ -49,7 +50,7 @@ TestSessionLocal = async_sessionmaker(
 
 
 @pytest.fixture
-async def db_session() -> AsyncSession:
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Create a test database session.
     
@@ -67,7 +68,7 @@ async def db_session() -> AsyncSession:
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncClient:
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """
     Create a test client with database session override.
     

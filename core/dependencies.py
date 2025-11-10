@@ -16,6 +16,7 @@ Example:
     ```
 """
 
+from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from semantic_kernel import Kernel
@@ -28,7 +29,7 @@ from domain.services import FilmService, RentalService, AIService, CategoryServi
 
 
 # Database dependencies
-async def get_db_session() -> AsyncSession:
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Get async database session.
     

@@ -167,7 +167,7 @@ class HandoffService:
         finally:
             # Stop runtime
             try:
-                runtime.stop()
+                await runtime.stop()
             except Exception:
                 try:
                     await runtime.stop_when_idle()

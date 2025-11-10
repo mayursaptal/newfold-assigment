@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     """
 
     # Database Configuration
-    database_url: str
+    database_url: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/interview_db"
     # Individual postgres fields are optional if DATABASE_URL is provided
     postgres_user: Optional[str] = None
     postgres_password: Optional[str] = None
@@ -61,10 +61,10 @@ class Settings(BaseSettings):
     postgres_port: Optional[int] = None
 
     # Application Settings
-    debug: bool
-    log_level: str
-    secret_key: str
-    api_v1_prefix: str
+    debug: bool = True
+    log_level: str = "INFO"
+    secret_key: str = "dev-secret-key-change-in-production"
+    api_v1_prefix: str = "/api/v1"
 
     # AI Configuration (OpenAI)
     openai_api_key: Optional[str] = None
@@ -72,8 +72,8 @@ class Settings(BaseSettings):
     openai_org_id: Optional[str] = None
 
     # Server Configuration
-    host: str
-    port: int
+    host: str = "0.0.0.0"
+    port: int = 8000
 
     model_config = SettingsConfigDict(
         env_file=".env",

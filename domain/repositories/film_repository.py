@@ -19,6 +19,7 @@ Example:
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, text
+from sqlalchemy.sql import Select, Delete
 from typing import List, Optional
 from domain.models.film import Film
 from domain.schemas.film import FilmCreate, FilmUpdate
@@ -117,9 +118,8 @@ class FilmRepository:
         Returns:
             Film entity or None
         """
-        result = await self.session.execute(
-            select(Film).where(Film.id == film_id)
-        )
+        stmt: Select[tuple[Film]] = select(Film).where(Film.id == film_id)
+        result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
     
     async def get_all(
@@ -307,9 +307,8 @@ class FilmRepository:
         Returns:
             True if deleted, False if not found
         """
-        result = await self.session.execute(
-            delete(Film).where(Film.id == film_id)
-        )
+        stmt: Delete = delete(Film).where(Film.id == film_id)
+        result = await self.session.execute(stmt)
         await self.session.commit()
         return result.rowcount > 0
     

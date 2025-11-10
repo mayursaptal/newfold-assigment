@@ -4,6 +4,7 @@ This agent uses Semantic Kernel's ChatCompletionAgent to provide thoughtful,
 accurate answers to general questions using the configured LLM model.
 """
 
+from typing import Optional
 from semantic_kernel import Kernel
 from semantic_kernel.agents import ChatCompletionAgent
 from semantic_kernel.functions import KernelArguments
@@ -25,7 +26,7 @@ class LLMAgent:
         description: Agent description (required for HandoffOrchestration)
     """
     
-    def __init__(self, kernel: Kernel, instructions: str = None):
+    def __init__(self, kernel: Kernel, instructions: Optional[str] = None):
         """Initialize LLMAgent with Semantic Kernel.
         
         Args:

@@ -19,6 +19,7 @@ Example:
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, delete, text
+from sqlalchemy.sql import Update, Delete
 from typing import List, Optional
 from domain.models.rental import Rental
 from domain.schemas.rental import RentalCreate, RentalUpdate
@@ -190,11 +191,8 @@ class RentalRepository:
         if not update_data:
             return await self.get_by_id(rental_id)
         
-        await self.session.execute(
-            update(Rental)
-            .where(Rental.id == rental_id)
-            .values(**update_data)
-        )
+        stmt: Update = update(Rental).where(Rental.id == rental_id).values(**update_data)
+        await self.session.execute(stmt)
         await self.session.commit()
         return await self.get_by_id(rental_id)
     
@@ -208,9 +206,8 @@ class RentalRepository:
         Returns:
             True if deleted, False if not found
         """
-        result = await self.session.execute(
-            delete(Rental).where(Rental.id == rental_id)
-        )
+        stmt: Delete = delete(Rental).where(Rental.id == rental_id)
+        result = await self.session.execute(stmt)
         await self.session.commit()
         return result.rowcount > 0
 

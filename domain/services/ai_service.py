@@ -186,7 +186,7 @@ Release Year: {film.release_year or 'N/A'}"""
             
             # Get response content
             # Handle different response types from Semantic Kernel
-            if hasattr(response, 'value'):
+            if response and hasattr(response, 'value'):
                 response_value = response.value
                 # If it's a ChatMessageContent or similar, extract the actual content
                 if hasattr(response_value, 'content') and response_value.content:

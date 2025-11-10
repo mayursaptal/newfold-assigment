@@ -80,7 +80,7 @@ def create_handoff_orchestration(session: AsyncSession, kernel: Kernel) -> tuple
     }
     
     # Create response callback to track agent responses and last agent
-    def agent_response_callback(message: ChatMessageContent) -> None:
+    async def agent_response_callback(message: ChatMessageContent) -> None:
         """Callback to log agent responses and track last agent."""
         agent_name = message.name or "Unknown"
         previous_agent = agent_tracker.get("last_agent", "Unknown")
@@ -102,11 +102,11 @@ def create_handoff_orchestration(session: AsyncSession, kernel: Kernel) -> tuple
             items = None
             if hasattr(message, 'items'):
                 items = message.items
-            elif hasattr(message, '__getitem__'):
+            elif hasattr(message, '__getitem__') and hasattr(message, '__contains__'):
                 # Try to access as dict/list
                 try:
                     if 'items' in message:
-                        items = message['items']
+                        items = message['items']  # type: ignore
                 except (TypeError, KeyError):
                     pass
             
@@ -202,7 +202,7 @@ def create_handoff_orchestration(session: AsyncSession, kernel: Kernel) -> tuple
         In API context, the initial question is provided via the 'task' parameter.
         This function should NOT be called repeatedly after agents provide responses.
         """
-        call_count = agent_tracker.get("human_response_calls", 0)
+        call_count: int = agent_tracker.get("human_response_calls", 0)
         agent_tracker["human_response_calls"] = call_count + 1
         
         logger.debug(
