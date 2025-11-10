@@ -19,10 +19,10 @@ if [ "$DEBUG_MODE" = "true" ]; then
     if [ "$DEBUG_WAIT" = "true" ]; then
         echo "⏳ Waiting for debugger to attach on port $DEBUG_PORT..."
         echo "🔗 Connect your debugger to localhost:$DEBUG_PORT"
-        exec poetry run python -m debugpy --listen 0.0.0.0:$DEBUG_PORT --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port $APP_PORT --reload
+        exec poetry run python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:$DEBUG_PORT --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port $APP_PORT --reload
     else
         echo "🚀 Starting with debugger listening (no wait)..."
-        exec poetry run python -m debugpy --listen 0.0.0.0:$DEBUG_PORT -m uvicorn app.main:app --host 0.0.0.0 --port $APP_PORT --reload
+        exec poetry run python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:$DEBUG_PORT -m uvicorn app.main:app --host 0.0.0.0 --port $APP_PORT --reload
     fi
 else
     echo "🚀 Starting FastAPI in normal mode..."
