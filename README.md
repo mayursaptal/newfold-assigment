@@ -622,9 +622,10 @@ Base URL: `http://localhost:8000/api/v1`
 curl -X GET "http://localhost:8000/api/v1/films/?skip=0&limit=10"
 ```
 
-**Get films by category**
+**Get films by category** (case insensitive, supports partial matching)
 ```bash
-curl -X GET "http://localhost:8000/api/v1/films/?category=Action&skip=0&limit=10"
+curl -X GET "http://localhost:8000/api/v1/films/?category=action&skip=0&limit=10"
+curl -X GET "http://localhost:8000/api/v1/films/?category=Act&skip=0&limit=10"
 ```
 
 **Get film by ID**

@@ -43,13 +43,15 @@ Complete reference for all API endpoints with request/response examples, paramet
 **Query Parameters**:
 - `skip` (int, optional): Number of records to skip (default: 0)
 - `limit` (int, optional): Maximum number of records (default: 100, max: 1000)
-- `category` (str, optional): Filter by category name
+- `category` (str, optional): Filter by category name (case insensitive, supports partial matching)
 - `year` (int, optional): Filter by release year
 - `rating` (str, optional): Filter by MPAA rating
 
 **Example Request**:
 ```bash
-curl -X GET "http://localhost:8000/api/v1/films/?skip=0&limit=10&category=Action"
+# Case insensitive and partial matching
+curl -X GET "http://localhost:8000/api/v1/films/?skip=0&limit=10&category=action"
+curl -X GET "http://localhost:8000/api/v1/films/?skip=0&limit=10&category=Act"
 ```
 
 **Response**:
@@ -586,8 +588,8 @@ X-RateLimit-Reset: 1640995200
 
 ### Using curl
 ```bash
-# Get films with filtering
-curl -X GET "http://localhost:8000/api/v1/films/?category=Action&year=2010" \
+# Get films with filtering (case insensitive category)
+curl -X GET "http://localhost:8000/api/v1/films/?category=action&year=2010" \
   -H "Accept: application/json"
 
 # Create a new film

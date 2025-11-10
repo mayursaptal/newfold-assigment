@@ -5,7 +5,8 @@
 ### Core Framework
 - **FastAPI** (0.104.1+) - Modern async web framework
 - **Uvicorn** - ASGI server
-- **Python** 3.10+ - Programming language
+- **Python** 3.10-3.12 - Programming language (semantic-kernel compatibility)
+- **Poetry** - Modern dependency management and packaging tool
 
 ### Database
 - **SQLModel** (0.0.14+) - Type-safe ORM built on SQLAlchemy and Pydantic
@@ -54,14 +55,22 @@
 
 ## Development Setup
 
-### Virtual Environment
+### Poetry (Recommended)
+```bash
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install dependencies
+poetry install
+
+# Activate virtual environment
+poetry shell
+```
+
+### Alternative: Virtual Environment
 ```bash
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-### Installation
-```bash
 pip install -e ".[dev]"
 ```
 
@@ -136,10 +145,12 @@ Required in `.env`:
 
 ## Constraints
 
-- Python 3.10+ required
+- Python 3.10-3.12 required (semantic-kernel compatibility)
 - PostgreSQL 12+ required
 - Async/await pattern throughout
 - Type hints required for all functions
+- Comprehensive Pydantic validation for all models
+- Database constraints enforced at both application and database level
 - Semantic Kernel plugins must follow expected directory structure
 - Native function plugins must be registered before agent creation
 - OpenAI API key required for AI agent functionality
@@ -148,6 +159,7 @@ Required in `.env`:
 - Timeout handling required for orchestration operations (default: 30 seconds)
 - debugpy required in dev dependencies for Docker debugging
 - Docker containers must be started with appropriate environment variables for debug mode
+- Poetry lock file must be maintained for reproducible builds
 
 ## Semantic Kernel Plugin Structure
 

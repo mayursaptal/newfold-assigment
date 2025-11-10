@@ -2,9 +2,9 @@
 
 ## Current Work Focus
 
-**Status**: Agent Orchestration System Complete ✅
+**Status**: Production-Ready System with Enhanced Features ✅
 
-The project now implements a fully functional AI agent orchestration system using Semantic Kernel's `HandoffOrchestration` and `ChatCompletionAgent`:
+The project now implements a fully functional AI agent orchestration system using Semantic Kernel's `HandoffOrchestration` and `ChatCompletionAgent`, with recent enhancements including Poetry integration, comprehensive validation, and improved API functionality:
 
 - **SearchAgent**: Handles film-related questions using native function plugins
 - **LLMAgent**: Handles general questions using prompt-based plugins  
@@ -14,6 +14,17 @@ The project now implements a fully functional AI agent orchestration system usin
 - **HandoffService**: Service layer managing orchestration lifecycle and response extraction
 
 ## Recent Changes
+
+### Poetry Integration & Enhanced Validation (Latest)
+- ✅ Integrated Poetry for modern dependency management and packaging
+- ✅ Updated `pyproject.toml` with Poetry configuration and author information
+- ✅ Enhanced Docker setup to use Poetry for faster, more reliable builds
+- ✅ Added comprehensive Pydantic validation for Film models (release_year, rental_duration, etc.)
+- ✅ Implemented robust error handling in API routes with specific validation messages
+- ✅ Enhanced category filtering with case-insensitive partial matching using PostgreSQL ILIKE
+- ✅ Added comprehensive test coverage for validation scenarios
+- ✅ Updated all documentation to reflect Poetry usage and new features
+- ✅ Fixed Python version compatibility issues (3.10-3.12 for semantic-kernel)
 
 ### Streamlined Docker Debug Configuration
 - ✅ Implemented smart Docker entrypoint with environment-driven debug mode
