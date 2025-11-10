@@ -20,7 +20,7 @@ Example:
         "language_id": 1,
         "rental_duration": 3
     }
-    
+
     # Get films by category
     GET /api/v1/films/?category=Action&skip=0&limit=10
     ```
@@ -42,11 +42,11 @@ async def create_film(
 ):
     """
     Create a new film.
-    
+
     Args:
         film: Film creation data
         service: Film service (injected)
-        
+
     Returns:
         Created film
     """
@@ -62,13 +62,13 @@ async def get_films(
 ):
     """
     Get all films with pagination and optional category filter.
-    
+
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
         category: Optional category name to filter by (?category=Action)
         service: Film service (injected)
-        
+
     Returns:
         List of films
     """
@@ -82,14 +82,14 @@ async def get_film(
 ):
     """
     Get film by ID.
-    
+
     Args:
         film_id: Film ID
         service: Film service (injected)
-        
+
     Returns:
         Film
-        
+
     Raises:
         HTTPException: If film not found
     """
@@ -110,15 +110,15 @@ async def update_film(
 ):
     """
     Update a film.
-    
+
     Args:
         film_id: Film ID
         film_update: Film update data
         service: Film service (injected)
-        
+
     Returns:
         Updated film
-        
+
     Raises:
         HTTPException: If film not found
     """
@@ -138,11 +138,11 @@ async def delete_film(
 ):
     """
     Delete a film.
-    
+
     Args:
         film_id: Film ID
         service: Film service (injected)
-        
+
     Raises:
         HTTPException: If film not found
     """
@@ -152,4 +152,3 @@ async def delete_film(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Film with id {film_id} not found",
         )
-

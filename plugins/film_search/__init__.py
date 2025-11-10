@@ -12,13 +12,13 @@ Example:
     ```python
     from plugins.film_search import FilmSearchPlugin
     from domain.repositories import FilmRepository
-    
+
     # Create plugin with repository
     plugin = FilmSearchPlugin(repository)
-    
+
     # Register with kernel
     kernel.add_plugin(plugin, "film_search")
-    
+
     # Agent can now use search_film function
     ```
 
@@ -29,4 +29,3 @@ Functions:
 from .film_search_plugin import FilmSearchPlugin
 
 __all__ = ["FilmSearchPlugin"]
-

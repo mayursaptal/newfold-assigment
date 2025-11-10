@@ -11,7 +11,7 @@ Example:
     ```python
     # Get customer rentals
     GET /api/v1/customers/1/rentals?skip=0&limit=10
-    
+
     # Create rental (requires Bearer token)
     POST /api/v1/customers/1/rentals
     Authorization: Bearer dvd_test_token_123
@@ -40,13 +40,13 @@ async def get_customer_rentals(
 ):
     """
     Get all rentals for a specific customer with pagination.
-    
+
     Args:
         customer_id: Customer ID
         skip: Number of records to skip (default: 0)
         limit: Maximum number of records to return (default: 100)
         service: Rental service (injected)
-        
+
     Returns:
         List of customer rentals
     """
@@ -54,7 +54,9 @@ async def get_customer_rentals(
     return rentals
 
 
-@router.post("/{customer_id}/rentals", response_model=RentalRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{customer_id}/rentals", response_model=RentalRead, status_code=status.HTTP_201_CREATED
+)
 async def create_customer_rental(
     customer_id: int,
     rental_data: RentalCreateRequest,
@@ -63,20 +65,20 @@ async def create_customer_rental(
 ):
     """
     Create a new rental for a customer.
-    
+
     Args:
         customer_id: Customer ID
         rental_data: Rental creation data (inventory_id, staff_id, rental_date)
         service: Rental service (injected)
         token: Verified Bearer token (must start with 'dvd_')
-        
+
     Returns:
         Created rental
-        
+
     Raises:
         HTTPException: If customer not found or validation fails
     """
-    
+
     # Create rental with customer_id from path
     rental_create = RentalCreate(
         inventory_id=rental_data.inventory_id,
@@ -84,7 +86,7 @@ async def create_customer_rental(
         staff_id=rental_data.staff_id,
         rental_date=rental_data.rental_date,  # Will default to now() in repository
     )
-    
+
     try:
         rental = await service.create_rental(rental_create)
         return rental
@@ -93,4 +95,3 @@ async def create_customer_rental(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to create rental: {str(e)}",
         )
-

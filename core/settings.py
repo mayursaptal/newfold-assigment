@@ -28,11 +28,11 @@ for env_path in env_paths:
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables.
-    
+
     This class defines all application configuration settings that are
     loaded from environment variables or a .env file. Settings are
     validated at initialization time.
-    
+
     Attributes:
         database_url: PostgreSQL database connection URL
         postgres_user: PostgreSQL username (optional if DATABASE_URL provided)
@@ -85,4 +85,3 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
-

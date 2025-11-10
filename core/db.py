@@ -7,7 +7,7 @@ pooling, session lifecycle, and database initialization.
 Example:
     ```python
     from core.db import get_async_session
-    
+
     async for session in get_async_session():
         # Use session for database operations
         pass
@@ -40,13 +40,13 @@ AsyncSessionLocal = async_sessionmaker(
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency function to get async database session.
-    
+
     This is an async generator that yields a database session and
     automatically handles commit/rollback on success/failure.
-    
+
     Yields:
         AsyncSession: Database session instance
-        
+
     Example:
         ```python
         async for session in get_async_session():
@@ -67,10 +67,10 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Initialize database tables.
-    
+
     Creates all database tables defined in SQLModel metadata.
     This should be called once at application startup.
-    
+
     Note:
         This uses SQLModel.metadata.create_all which creates all
         tables defined in the application's models.
@@ -81,9 +81,8 @@ async def init_db() -> None:
 
 async def close_db() -> None:
     """Close database connections.
-    
+
     Disposes of the database engine and closes all connection pools.
     This should be called at application shutdown.
     """
     await engine.dispose()
-

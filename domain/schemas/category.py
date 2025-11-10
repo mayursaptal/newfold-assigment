@@ -7,7 +7,7 @@ in this application (no create/update endpoints).
 Example:
     ```python
     from domain.schemas import CategoryRead
-    
+
     # Read response
     category = CategoryRead(
         id=1,
@@ -18,21 +18,20 @@ Example:
 """
 
 from datetime import datetime
-from sqlmodel import SQLModel
 from domain.models.category import CategoryBase
 
 
 class CategoryRead(CategoryBase):
     """Schema for reading category data.
-    
+
     Used to serialize category data in API responses. Includes the
     category ID and last_update timestamp in addition to category name.
-    
+
     Attributes:
         id: Category primary key
         name: Category name (inherited from CategoryBase)
         last_update: Timestamp of last update
     """
+
     id: int
     last_update: datetime
-

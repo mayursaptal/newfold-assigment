@@ -11,7 +11,7 @@ Example:
     ```python
     # Ask a question
     GET /api/v1/ai/ask?question=What is artificial intelligence?
-    
+
     # Get film summary
     POST /api/v1/ai/summary
     {
@@ -36,22 +36,23 @@ async def ask_question(
 ):
     """
     Ask a question to the AI and get a streaming text response.
-    
+
     Args:
         question: Question to ask
         service: AI service (injected)
-        
+
     Returns:
         Streaming plain text response
     """
+
     async def generate_stream():
         async for chunk in service.stream_chat(question):
             yield chunk
-    
+
     return StreamingResponse(
         generate_stream(),
         media_type="text/plain",
-        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
     )
 
 
@@ -63,14 +64,14 @@ async def get_film_summary(
 ):
     """
     Get AI-generated summary for a film with structured JSON response.
-    
+
     Uses Semantic Kernel's invoke method with prompt template and JSON response format.
-    
+
     Args:
         request: Film summary request with film_id
         ai_service: AI service (injected)
         film_service: Film service (injected) - used to look up film
-        
+
     Returns:
         Structured JSON with title, rating, and recommended fields
     """
@@ -85,16 +86,16 @@ async def handoff_question(
 ):
     """
     Route question to appropriate agent using handoff orchestration.
-    
+
     Uses Semantic Kernel's HandoffOrchestration following Microsoft documentation pattern:
     - Creates orchestration with SearchAgent and LLMAgent
     - Uses OrchestrationHandoffs configuration for automatic routing
     - Handles handoffs based on agent responses and descriptions
-    
+
     Args:
         request: Handoff request with question
         service: Handoff service (injected)
-        
+
     Returns:
         Response with agent name and answer
     """

@@ -25,10 +25,10 @@ Available Plugins:
 Example:
     ```python
     from core.ai_kernel import get_default_kernel
-    
+
     # Plugins are automatically registered
     kernel = get_default_kernel()
-    
+
     # Access registered plugins
     film_search = kernel.get_plugin("film_search")
     ```

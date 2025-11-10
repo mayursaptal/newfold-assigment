@@ -9,7 +9,7 @@ Example:
     ```python
     from fastapi import Depends
     from core.dependencies import get_film_service
-    
+
     @router.get("/films")
     async def get_films(service: FilmService = Depends(get_film_service)):
         return await service.get_films()
@@ -23,7 +23,7 @@ from semantic_kernel import Kernel
 from core.db import get_async_session
 from core.ai_kernel import get_default_kernel
 from core.settings import settings, Settings
-from core.auth import verify_dvd_token, get_current_user, create_token_guard
+from core.auth import verify_dvd_token, get_current_user
 from domain.repositories import FilmRepository, RentalRepository, CategoryRepository
 from domain.services import FilmService, RentalService, AIService, CategoryService, HandoffService
 
@@ -32,7 +32,7 @@ from domain.services import FilmService, RentalService, AIService, CategoryServi
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Get async database session.
-    
+
     Yields:
         AsyncSession: Database session
     """
@@ -52,10 +52,10 @@ def get_film_repository(
 ) -> FilmRepository:
     """
     Get film repository instance.
-    
+
     Args:
         session: Database session
-        
+
     Returns:
         FilmRepository instance
     """
@@ -67,10 +67,10 @@ def get_rental_repository(
 ) -> RentalRepository:
     """
     Get rental repository instance.
-    
+
     Args:
         session: Database session
-        
+
     Returns:
         RentalRepository instance
     """
@@ -82,10 +82,10 @@ def get_category_repository(
 ) -> CategoryRepository:
     """
     Get category repository instance.
-    
+
     Args:
         session: Database session
-        
+
     Returns:
         CategoryRepository instance
     """
@@ -98,10 +98,10 @@ def get_film_service(
 ) -> FilmService:
     """
     Get film service instance.
-    
+
     Args:
         repository: Film repository
-        
+
     Returns:
         FilmService instance
     """
@@ -113,10 +113,10 @@ def get_rental_service(
 ) -> RentalService:
     """
     Get rental service instance.
-    
+
     Args:
         repository: Rental repository
-        
+
     Returns:
         RentalService instance
     """
@@ -128,10 +128,10 @@ def get_category_service(
 ) -> CategoryService:
     """
     Get category service instance.
-    
+
     Args:
         repository: Category repository
-        
+
     Returns:
         CategoryService instance
     """
@@ -142,7 +142,7 @@ def get_category_service(
 def get_ai_kernel() -> Kernel:
     """
     Get Semantic Kernel instance.
-    
+
     Returns:
         Kernel instance
     """
@@ -155,10 +155,10 @@ def get_ai_service(
 ) -> AIService:
     """
     Get AI service instance.
-    
+
     Args:
         kernel: Semantic Kernel instance
-        
+
     Returns:
         AIService instance
     """
@@ -172,11 +172,11 @@ def get_handoff_service(
 ) -> HandoffService:
     """
     Get handoff service instance.
-    
+
     Args:
         session: Database session
         kernel: Semantic Kernel instance
-        
+
     Returns:
         HandoffService instance
     """
@@ -187,13 +187,13 @@ def get_handoff_service(
 def get_dvd_token_guard():
     """
     Get DVD token guard dependency.
-    
+
     Returns a token guard that validates Bearer tokens with 'dvd_' prefix.
     This is a shared dependency that can be used across multiple endpoints.
-    
+
     Returns:
         Callable: Token guard dependency function
-        
+
     Example:
         ```python
         @router.post("/endpoint")
@@ -210,13 +210,13 @@ def get_dvd_token_guard():
 def get_user_guard():
     """
     Get current user guard dependency.
-    
+
     Returns a dependency that validates JWT tokens and extracts user information.
     This is a shared dependency that can be used across multiple endpoints.
-    
+
     Returns:
         Callable: User guard dependency function
-        
+
     Example:
         ```python
         @router.get("/profile")
@@ -227,4 +227,3 @@ def get_user_guard():
         ```
     """
     return get_current_user
-

@@ -7,7 +7,7 @@ including title, description, rating, and rental information.
 Example:
     ```python
     from domain.models import Film
-    
+
     film = Film(
         title="The Matrix",
         language_id=1,
@@ -26,10 +26,10 @@ from sqlalchemy import Column, Enum as SQLEnum, TypeDecorator
 
 class FilmRating(str, Enum):
     """Film rating enumeration.
-    
+
     Represents the Motion Picture Association of America (MPAA) film
     rating system used to classify films based on content.
-    
+
     Attributes:
         G: General audiences - all ages admitted
         PG: Parental guidance suggested
@@ -37,6 +37,7 @@ class FilmRating(str, Enum):
         R: Restricted - children under 17 require accompanying parent or adult guardian
         NC17: No one 17 and under admitted
     """
+
     G = "G"
     PG = "PG"
     PG13 = "PG-13"
@@ -46,21 +47,22 @@ class FilmRating(str, Enum):
 
 class FilmRatingType(TypeDecorator):
     """Custom type decorator to handle FilmRating enum with database values.
-    
+
     This decorator ensures that SQLAlchemy uses enum values (e.g., "NC-17")
     instead of enum names (e.g., "NC17") when mapping to/from the database.
     """
+
     impl = SQLEnum
     cache_ok = True
-    
+
     def __init__(self):
         super().__init__(
             FilmRating,
             values_callable=lambda x: [e.value for e in FilmRating],
-            name='mpaa_rating',
-            create_constraint=False
+            name="mpaa_rating",
+            create_constraint=False,
         )
-    
+
     def process_bind_param(self, value, dialect):
         """Convert enum to database value."""
         if value is None:
@@ -68,7 +70,7 @@ class FilmRatingType(TypeDecorator):
         if isinstance(value, FilmRating):
             return value.value
         return value
-    
+
     def process_result_value(self, value, dialect):
         """Convert database value to enum."""
         if value is None:
@@ -83,10 +85,10 @@ class FilmRatingType(TypeDecorator):
 
 class FilmBase(SQLModel):
     """Base film model with common attributes.
-    
+
     This is the base class for Film entities, containing all the common
     film attributes that are shared between create, update, and read operations.
-    
+
     Attributes:
         title: Film title (indexed for faster searches)
         description: Film description/synopsis
@@ -99,6 +101,7 @@ class FilmBase(SQLModel):
         rating: MPAA rating (G, PG, PG-13, R, NC-17)
         streaming_available: Whether film is available for streaming (default: False)
     """
+
     title: str = Field(index=True)
     description: Optional[str] = None
     release_year: Optional[int] = None
@@ -107,33 +110,29 @@ class FilmBase(SQLModel):
     rental_rate: float = Field(default=4.99)
     length: Optional[int] = None
     replacement_cost: float = Field(default=19.99)
-    rating: Optional[FilmRating] = Field(
-        default=None,
-        sa_column=Column(FilmRatingType())
-    )
+    rating: Optional[FilmRating] = Field(default=None, sa_column=Column(FilmRatingType()))
     streaming_available: bool = Field(default=False)  # Boolean column with default FALSE
 
 
 class Film(FilmBase, table=True):
     """Film entity mapped to database table.
-    
+
     This is the SQLModel entity that represents the 'film' table in the
     database. It extends FilmBase with database-specific fields like
     primary key and timestamps.
-    
+
     Attributes:
         id: Primary key (mapped to film_id column in database)
         last_update: Timestamp of last update (auto-set by database)
-        
+
     Note:
         The table name is explicitly set to 'film' to match the Pagila
         database schema. The id field maps to 'film_id' in the database.
     """
+
     __tablename__ = "film"
-    
+
     id: Optional[int] = Field(default=None, primary_key=True, sa_column_kwargs={"name": "film_id"})
     last_update: datetime = Field(
-        default_factory=datetime.utcnow,
-        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"}
+        default_factory=datetime.utcnow, sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"}
     )
-

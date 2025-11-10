@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from sqlmodel import SQLModel
 from core.settings import settings
+
 # Import all models so Alembic can detect them
 from domain.models import Film, Rental  # noqa: F401
 
@@ -80,7 +81,7 @@ def do_run_migrations(connection: Connection) -> None:
     # Configure context with compare_type=True for better autogenerate
     # This helps compare SQLModel metadata with DB schema
     context.configure(
-        connection=connection, 
+        connection=connection,
         target_metadata=target_metadata,
         compare_type=True,  # Compare column types
         compare_server_default=True,  # Compare server defaults
@@ -99,7 +100,7 @@ async def run_migrations_online() -> None:
     """
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_url()
-    
+
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -116,5 +117,5 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     import asyncio
-    asyncio.run(run_migrations_online())
 
+    asyncio.run(run_migrations_online())

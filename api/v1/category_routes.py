@@ -11,7 +11,7 @@ Example:
     ```python
     # Get all categories
     GET /api/v1/categories?skip=0&limit=10
-    
+
     # Get category by ID
     GET /api/v1/categories/1
     ```
@@ -34,12 +34,12 @@ async def get_categories(
 ):
     """
     Get all categories with pagination.
-    
+
     Args:
         skip: Number of records to skip (default: 0)
         limit: Maximum number of records to return (default: 100)
         service: Category service (injected)
-        
+
     Returns:
         List of categories
     """
@@ -53,14 +53,14 @@ async def get_category(
 ):
     """
     Get category by ID.
-    
+
     Args:
         category_id: Category ID
         service: Category service (injected)
-        
+
     Returns:
         Category details
-        
+
     Raises:
         HTTPException: If category not found
     """
@@ -71,4 +71,3 @@ async def get_category(
             detail=f"Category with ID {category_id} not found",
         )
     return category
-

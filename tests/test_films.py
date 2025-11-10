@@ -15,7 +15,7 @@ async def test_create_film(client: AsyncClient):
         "language_id": 1,
         "rental_duration": 3,
         "rental_rate": 4.99,
-        "replacement_cost": 19.99
+        "replacement_cost": 19.99,
     }
     response = await client.post("/api/v1/films/", json=film_data)
     assert response.status_code == 201
@@ -37,15 +37,11 @@ async def test_get_films(client: AsyncClient):
 async def test_get_film_by_id(client: AsyncClient):
     """Happy-path: Get film by ID."""
     # First create a film
-    film_data = {
-        "title": "Test Film ID",
-        "language_id": 1,
-        "rental_duration": 3
-    }
+    film_data = {"title": "Test Film ID", "language_id": 1, "rental_duration": 3}
     create_response = await client.post("/api/v1/films/", json=film_data)
     assert create_response.status_code == 201
     film_id = create_response.json()["id"]
-    
+
     # Then get it by ID
     response = await client.get(f"/api/v1/films/{film_id}")
     assert response.status_code == 200
@@ -58,15 +54,11 @@ async def test_get_film_by_id(client: AsyncClient):
 async def test_update_film(client: AsyncClient):
     """Happy-path: Update a film."""
     # First create a film
-    film_data = {
-        "title": "Original Title",
-        "language_id": 1,
-        "rental_duration": 3
-    }
+    film_data = {"title": "Original Title", "language_id": 1, "rental_duration": 3}
     create_response = await client.post("/api/v1/films/", json=film_data)
     assert create_response.status_code == 201
     film_id = create_response.json()["id"]
-    
+
     # Then update it
     update_data = {"title": "Updated Title"}
     response = await client.put(f"/api/v1/films/{film_id}", json=update_data)
@@ -79,16 +71,11 @@ async def test_update_film(client: AsyncClient):
 async def test_delete_film(client: AsyncClient):
     """Happy-path: Delete a film."""
     # First create a film
-    film_data = {
-        "title": "Film to Delete",
-        "language_id": 1,
-        "rental_duration": 3
-    }
+    film_data = {"title": "Film to Delete", "language_id": 1, "rental_duration": 3}
     create_response = await client.post("/api/v1/films/", json=film_data)
     assert create_response.status_code == 201
     film_id = create_response.json()["id"]
-    
+
     # Then delete it
     response = await client.delete(f"/api/v1/films/{film_id}")
     assert response.status_code == 204
-

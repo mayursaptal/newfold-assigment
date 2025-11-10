@@ -12,33 +12,33 @@ from domain.repositories.film_repository import FilmRepository
 
 class FilmSearchPlugin:
     """Plugin providing native functions for film database searches.
-    
+
     This plugin exposes database query functions as tools that Semantic Kernel
     agents can use to fetch film information.
-    
+
     Attributes:
         repository: FilmRepository instance for database access
     """
-    
+
     def __init__(self, repository: FilmRepository):
         """Initialize plugin with repository.
-        
+
         Args:
             repository: FilmRepository instance for database access
         """
         self.repository = repository
-    
+
     @kernel_function(
         name="search_film",
-        description="Search for a film by title in the database. Returns film information including title, category, rating, rental rate, description, and release year. Use this when the user asks about a specific film. The title parameter can be a partial match - the function will find films with titles containing the search term."
+        description="Search for a film by title in the database. Returns film information including title, category, rating, rental rate, description, and release year. Use this when the user asks about a specific film. The title parameter can be a partial match - the function will find films with titles containing the search term.",
     )
     async def search_film(self, title: str) -> Optional[dict]:
         """
         Search for a film by title in the database.
-        
+
         Args:
             title: Film title to search for (case-insensitive partial match)
-            
+
         Returns:
             Dictionary with film info and category, or None if not found
             Format: {
@@ -51,4 +51,3 @@ class FilmSearchPlugin:
             }
         """
         return await self.repository.search_by_title_with_category(title)
-

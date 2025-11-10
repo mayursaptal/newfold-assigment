@@ -15,11 +15,11 @@ from plugins.film_search import FilmSearchPlugin
 
 class SearchAgent:
     """Agent that searches for film information in the database.
-    
+
     This agent uses ChatCompletionAgent with native function plugins to let the AI
     automatically handle film searches, understand questions, and format responses.
     The AI decides when to query the database and how to respond.
-    
+
     Attributes:
         agent: ChatCompletionAgent instance configured with film search and summary plugins
         kernel: Semantic Kernel instance (required for HandoffOrchestration)
@@ -27,10 +27,10 @@ class SearchAgent:
         name: Agent name for orchestration (required for OrchestrationHandoffs)
         description: Agent description (required for HandoffOrchestration)
     """
-    
+
     def __init__(self, repository: FilmRepository, kernel: Optional[Kernel] = None):
         """Initialize SearchAgent with repository and kernel.
-        
+
         Args:
             repository: FilmRepository instance for database access
             kernel: Optional Semantic Kernel instance (required for HandoffOrchestration)
@@ -39,18 +39,19 @@ class SearchAgent:
         self.logger = get_logger("ai")  # Use "ai" logger for file logging
         self.name = "SearchAgent"  # Required for OrchestrationHandoffs
         self.description = "A customer support agent that searches for film information in the database and generates short summaries of movies."
-        
+
         # Create a minimal kernel if not provided (required for HandoffOrchestration)
         if kernel is None:
             from semantic_kernel import Kernel
+
             kernel = Kernel()
         self.kernel = kernel
-        
+
         # Register native function plugin for film search
         film_search_plugin = FilmSearchPlugin(repository)
         kernel.add_plugin(film_search_plugin, "film_search")
         self.logger.info("Registered film_search native function plugin")
-        
+
         # Get other plugins from kernel (already registered)
         plugins = []
         try:
@@ -60,7 +61,7 @@ class SearchAgent:
                 self.logger.info("Using film_short_summary plugin with ChatCompletionAgent")
         except Exception:
             pass
-        
+
         # Default instructions for the agent - let AI handle everything
         default_instructions = (
             "You are a helpful customer support assistant specializing ONLY in film information. "
@@ -83,12 +84,11 @@ class SearchAgent:
             "5. CRITICAL: After providing film information, you MUST NOT respond again or continue the conversation. "
             "   The conversation should END after your film response. "
             "\n\nRemember: You are having a CONVERSATION, not completing tasks. Answer questions naturally and conversationally."
-        )        
+        )
         # Create ChatCompletionAgent with all plugins
         self.agent = ChatCompletionAgent(
             kernel=kernel,
             name=self.name,
             instructions=default_instructions,
-            arguments=KernelArguments()
+            arguments=KernelArguments(),
         )
-

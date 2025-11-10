@@ -11,7 +11,7 @@ The domain layer is organized into:
 
 Architecture:
     API Layer → Services → Repositories → Database
-    
+
 Key Features:
     - Type-safe models using SQLModel
     - Repository pattern for data access abstraction
@@ -24,7 +24,7 @@ Example:
     from domain.services import FilmService
     from domain.repositories import FilmRepository
     from domain.schemas import FilmCreate
-    
+
     # Service orchestrates business logic
     service = FilmService(repository)
     film = await service.create_film(FilmCreate(...))

@@ -22,4 +22,3 @@ router.include_router(rental_routes.router, prefix="/rentals", tags=["rentals"])
 router.include_router(customer_routes.router, prefix="/customers", tags=["customers"])
 router.include_router(category_routes.router, prefix="/categories", tags=["categories"])
 router.include_router(ai_routes.router, prefix="/ai", tags=["ai"])
-

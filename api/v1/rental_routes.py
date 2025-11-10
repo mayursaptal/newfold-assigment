@@ -38,11 +38,11 @@ async def create_rental(
 ):
     """
     Create a new rental.
-    
+
     Args:
         rental: Rental creation data
         service: Rental service (injected)
-        
+
     Returns:
         Created rental
     """
@@ -57,12 +57,12 @@ async def get_rentals(
 ):
     """
     Get all rentals with pagination.
-    
+
     Args:
         skip: Number of records to skip
         limit: Maximum number of records to return
         service: Rental service (injected)
-        
+
     Returns:
         List of rentals
     """
@@ -76,14 +76,14 @@ async def get_rental(
 ):
     """
     Get rental by ID.
-    
+
     Args:
         rental_id: Rental ID
         service: Rental service (injected)
-        
+
     Returns:
         Rental
-        
+
     Raises:
         HTTPException: If rental not found
     """
@@ -104,15 +104,15 @@ async def update_rental(
 ):
     """
     Update a rental.
-    
+
     Args:
         rental_id: Rental ID
         rental_update: Rental update data
         service: Rental service (injected)
-        
+
     Returns:
         Updated rental
-        
+
     Raises:
         HTTPException: If rental not found
     """
@@ -132,11 +132,11 @@ async def delete_rental(
 ):
     """
     Delete a rental.
-    
+
     Args:
         rental_id: Rental ID
         service: Rental service (injected)
-        
+
     Raises:
         HTTPException: If rental not found
     """
@@ -146,4 +146,3 @@ async def delete_rental(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Rental with id {rental_id} not found",
         )
-

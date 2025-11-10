@@ -26,9 +26,9 @@ Example:
     ```python
     from fastapi import APIRouter, Depends
     from domain.services import FilmService
-    
+
     router = APIRouter()
-    
+
     @router.get("/films/")
     async def get_films(service: FilmService = Depends(get_film_service)):
         return await service.get_films()

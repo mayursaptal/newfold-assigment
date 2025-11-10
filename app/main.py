@@ -35,7 +35,7 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     """
     Application lifespan events.
-    
+
     Args:
         app: FastAPI application instance
     """
@@ -75,9 +75,9 @@ app.include_router(v1_router, prefix=settings.api_v1_prefix)
 @app.get("/")
 async def root():
     """Root endpoint.
-    
+
     Returns basic API information and links to documentation.
-    
+
     Returns:
         dict: API information including message, version, and docs URL
     """
@@ -91,9 +91,9 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint.
-    
+
     Used for monitoring and load balancer health checks.
-    
+
     Returns:
         dict: Health status information
     """
@@ -105,10 +105,10 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
     )
-
