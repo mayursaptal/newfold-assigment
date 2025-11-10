@@ -4,69 +4,13 @@ FastAPI application with SQLModel, Semantic Kernel (OpenAI), Alembic migrations,
 
 **Dependency Management**: This project uses [Poetry](https://python-poetry.org/) for dependency management and packaging.
 
-## Poetry Overview
-
-[Poetry](https://python-poetry.org/) is a modern dependency management and packaging tool for Python that provides:
-
-- **Dependency Resolution**: Automatically resolves and locks dependencies
-- **Virtual Environment Management**: Creates and manages virtual environments automatically
-- **Build System**: Modern build system based on PEP 517/518
-- **Publishing**: Easy publishing to PyPI
-- **Lock File**: `poetry.lock` ensures reproducible builds across environments
-
-### Important Note: Python Version Compatibility
+**Important Note: Python Version Compatibility**
 
 **This project currently requires Python 3.10-3.12** due to semantic-kernel dependency constraints. Python 3.13+ is not yet supported by semantic-kernel. If you're using Python 3.13+, you can either:
 
 1. **Use Docker** (recommended) - the Docker setup handles Python version automatically
 2. **Use pyenv** to install Python 3.12: `pyenv install 3.12.0 && pyenv local 3.12.0`
 3. **Use pip/venv** instead of Poetry (works with current Python version)
-
-### Poetry Installation
-
-```bash
-# Install Poetry (recommended method)
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Or via pip (not recommended for production)
-pip install poetry
-
-# Verify installation
-poetry --version
-```
-
-### Poetry Basic Commands
-
-```bash
-# Install dependencies (creates virtual environment automatically)
-poetry install
-
-# Install only production dependencies
-poetry install --no-dev
-
-# Add a new dependency
-poetry add fastapi
-
-# Add a development dependency
-poetry add --group dev pytest
-
-# Update dependencies
-poetry update
-
-# Show dependency tree
-poetry show --tree
-
-# Activate virtual environment
-poetry shell
-
-# Run commands in virtual environment
-poetry run python app/main.py
-poetry run pytest
-poetry run black .
-
-# Export requirements.txt (for compatibility)
-poetry export -f requirements.txt --output requirements.txt
-```
 
 ## Quick Start
 
@@ -289,39 +233,39 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 **Run all tests:**
 ```bash
 # Docker
-docker exec interview_fastapi python3 -m pytest /app/tests/ -v
+docker exec interview_fastapi poetry run pytest tests/ -v
 
 # Podman
-podman exec interview_fastapi python3 -m pytest /app/tests/ -v
+podman exec interview_fastapi poetry run pytest tests/ -v
 
 # Or using compose
 cd docker
-docker-compose exec fastapi python3 -m pytest /app/tests/ -v
-podman compose exec fastapi python3 -m pytest /app/tests/ -v
+docker-compose exec fastapi poetry run pytest tests/ -v
+podman compose exec fastapi poetry run pytest tests/ -v
 ```
 
 **Run specific test file:**
 ```bash
-docker exec interview_fastapi python3 -m pytest /app/tests/test_films.py -v
-podman exec interview_fastapi python3 -m pytest /app/tests/test_films.py -v
+docker exec interview_fastapi poetry run pytest tests/test_films.py -v
+podman exec interview_fastapi poetry run pytest tests/test_films.py -v
 ```
 
 **Run specific test:**
 ```bash
-docker exec interview_fastapi python3 -m pytest /app/tests/test_films.py::test_create_film -v
-podman exec interview_fastapi python3 -m pytest /app/tests/test_films.py::test_create_film -v
+docker exec interview_fastapi poetry run pytest tests/test_films.py::test_create_film -v
+podman exec interview_fastapi poetry run pytest tests/test_films.py::test_create_film -v
 ```
 
 **Run with coverage:**
 ```bash
-docker exec interview_fastapi python3 -m pytest /app/tests/ --cov=. --cov-report=html -v
-podman exec interview_fastapi python3 -m pytest /app/tests/ --cov=. --cov-report=html -v
+docker exec interview_fastapi poetry run pytest tests/ --cov=. --cov-report=html -v
+podman exec interview_fastapi poetry run pytest tests/ --cov=. --cov-report=html -v
 ```
 
 **Run with verbose output:**
 ```bash
-docker exec interview_fastapi python3 -m pytest /app/tests/ -v --tb=short
-podman exec interview_fastapi python3 -m pytest /app/tests/ -v --tb=short
+docker exec interview_fastapi poetry run pytest tests/ -v --tb=short
+podman exec interview_fastapi poetry run pytest tests/ -v --tb=short
 ```
 
 ### Option 2: Running Tests Locally (Without Docker)
@@ -450,7 +394,8 @@ python debug_init.py --server-only
 
 1. **Start containers with debugging:**
 ```bash
-docker-compose -f docker/docker-compose.yml -f docker/docker-compose.debug.yml up --build
+# Set debug environment variables and start
+DEBUG_MODE=true DEBUG_WAIT=true docker-compose -f docker/docker-compose.yml up --build
 ```
 
 2. **Connect Cursor debugger:**
@@ -878,11 +823,19 @@ This project uses pre-commit hooks to ensure code quality. Hooks run automatical
 
 **Install hooks:**
 ```bash
+# Using Poetry
+poetry run pre-commit install
+
+# Using pip/venv
 pre-commit install
 ```
 
 **Run hooks manually:**
 ```bash
+# Using Poetry
+poetry run pre-commit run --all-files
+
+# Using pip/venv
 pre-commit run --all-files
 ```
 
@@ -897,13 +850,17 @@ Type checking is enforced via mypy. CI will fail on type errors.
 
 **Run type checking locally:**
 ```bash
+# Using Poetry
+poetry run mypy . --config-file mypy.ini
+
+# Using pip/venv
 mypy . --config-file mypy.ini
 ```
 
 **Run type checking in Docker:**
 ```bash
-docker exec interview_fastapi mypy . --config-file mypy.ini
-podman exec interview_fastapi mypy . --config-file mypy.ini
+docker exec interview_fastapi poetry run mypy . --config-file mypy.ini
+podman exec interview_fastapi poetry run mypy . --config-file mypy.ini
 ```
 
 ### Code Quality
@@ -942,8 +899,8 @@ poetry run pytest tests/ -v
 black .
 
 # Docker/Podman
-docker exec interview_fastapi black /app
-podman exec interview_fastapi black /app
+docker exec interview_fastapi poetry run black .
+podman exec interview_fastapi poetry run black .
 ```
 
 **Lint code:**
@@ -953,10 +910,10 @@ ruff check .
 ruff check . --fix  # Auto-fix issues
 
 # Docker/Podman
-docker exec interview_fastapi ruff check /app
-docker exec interview_fastapi ruff check /app --fix
-podman exec interview_fastapi ruff check /app
-podman exec interview_fastapi ruff check /app --fix
+docker exec interview_fastapi poetry run ruff check .
+docker exec interview_fastapi poetry run ruff check . --fix
+podman exec interview_fastapi poetry run ruff check .
+podman exec interview_fastapi poetry run ruff check . --fix
 ```
 
 **Type check:**
@@ -965,8 +922,8 @@ podman exec interview_fastapi ruff check /app --fix
 mypy . --config-file mypy.ini
 
 # Docker/Podman
-docker exec interview_fastapi mypy /app --config-file mypy.ini
-podman exec interview_fastapi mypy /app --config-file mypy.ini
+docker exec interview_fastapi poetry run mypy . --config-file mypy.ini
+podman exec interview_fastapi poetry run mypy . --config-file mypy.ini
 ```
 
 ### Container Management
@@ -1137,7 +1094,7 @@ interview/
 - ✅ Dependency injection throughout
 - ✅ Structured logging with structlog
 - ✅ Bearer token authentication
-- ✅ Comprehensive test suite (17 happy-path tests)
+- ✅ Comprehensive test suite (25 comprehensive tests)
 - ✅ Pydoc documentation
 - ✅ Semantic Kernel plugin system
 - ✅ Agent orchestration (SearchAgent, LLMAgent)
