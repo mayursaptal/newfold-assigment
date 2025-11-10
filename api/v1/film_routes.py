@@ -39,7 +39,7 @@ router = APIRouter()
 async def create_film(
     film: FilmCreate,
     service: FilmService = Depends(get_film_service),
-):
+) -> FilmRead:
     """
     Create a new film.
 
@@ -59,7 +59,7 @@ async def get_films(
     limit: int = 100,
     category: Optional[str] = None,
     service: FilmService = Depends(get_film_service),
-):
+) -> List[FilmRead]:
     """
     Get all films with pagination and optional category filter.
 
@@ -79,7 +79,7 @@ async def get_films(
 async def get_film(
     film_id: int,
     service: FilmService = Depends(get_film_service),
-):
+) -> FilmRead:
     """
     Get film by ID.
 
@@ -107,7 +107,7 @@ async def update_film(
     film_id: int,
     film_update: FilmUpdate,
     service: FilmService = Depends(get_film_service),
-):
+) -> FilmRead:
     """
     Update a film.
 
@@ -135,7 +135,7 @@ async def update_film(
 async def delete_film(
     film_id: int,
     service: FilmService = Depends(get_film_service),
-):
+) -> dict[str, str]:
     """
     Delete a film.
 
@@ -152,3 +152,4 @@ async def delete_film(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Film with id {film_id} not found",
         )
+    return {"message": "Film deleted successfully"}

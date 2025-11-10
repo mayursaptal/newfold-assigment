@@ -18,6 +18,7 @@ Example:
 """
 
 import json
+from typing import AsyncGenerator
 from semantic_kernel import Kernel
 from semantic_kernel.functions import KernelArguments
 from domain.services.film_service import FilmService
@@ -45,7 +46,7 @@ class AIService:
         self.kernel = kernel
         self.logger = get_logger("ai")  # Automatically creates logs/ai/YYYY-MM-DD.log
 
-    async def stream_chat(self, question: str):
+    async def stream_chat(self, question: str) -> AsyncGenerator[str, None]:
         """
         Stream chat completion response using OpenAI.
 
@@ -86,8 +87,8 @@ class AIService:
                         elif hasattr(item, "value") and item.value:
                             chunk_text = str(item.value)
                             break
-                        elif isinstance(item, str):
-                            chunk_text = item
+                        elif isinstance(item, str):  # type: ignore[unreachable]
+                            chunk_text = item  # type: ignore[unreachable]
                             break
                         else:
                             # Fallback: convert the object to string, but skip if empty
@@ -111,8 +112,8 @@ class AIService:
                             chunk_text = str(choice.text)
                         if chunk_text:
                             break
-                elif isinstance(chunk, str):
-                    chunk_text = chunk
+                elif isinstance(chunk, str):  # type: ignore[unreachable]
+                    chunk_text = chunk  # type: ignore[unreachable]
 
                 # Yield the chunk if we found text
                 if chunk_text:

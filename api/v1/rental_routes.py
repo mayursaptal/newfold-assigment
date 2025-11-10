@@ -35,7 +35,7 @@ router = APIRouter()
 async def create_rental(
     rental: RentalCreate,
     service: RentalService = Depends(get_rental_service),
-):
+) -> RentalRead:
     """
     Create a new rental.
 
@@ -54,7 +54,7 @@ async def get_rentals(
     skip: int = 0,
     limit: int = 100,
     service: RentalService = Depends(get_rental_service),
-):
+) -> List[RentalRead]:
     """
     Get all rentals with pagination.
 
@@ -73,7 +73,7 @@ async def get_rentals(
 async def get_rental(
     rental_id: int,
     service: RentalService = Depends(get_rental_service),
-):
+) -> RentalRead:
     """
     Get rental by ID.
 
@@ -101,7 +101,7 @@ async def update_rental(
     rental_id: int,
     rental_update: RentalUpdate,
     service: RentalService = Depends(get_rental_service),
-):
+) -> RentalRead:
     """
     Update a rental.
 
@@ -129,7 +129,7 @@ async def update_rental(
 async def delete_rental(
     rental_id: int,
     service: RentalService = Depends(get_rental_service),
-):
+) -> dict[str, str]:
     """
     Delete a rental.
 
@@ -146,3 +146,4 @@ async def delete_rental(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Rental with id {rental_id} not found",
         )
+    return {"message": "Rental deleted successfully"}

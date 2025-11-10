@@ -31,6 +31,8 @@ ENV/
 *.swp
 *.swo
 *~
+.mypy_cache/
+.ruff_cache/
 
 # Environment variables
 .env

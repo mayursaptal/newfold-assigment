@@ -71,7 +71,7 @@ def setup_logging() -> None:
     )
 
 
-def get_logger(name: str = __name__):
+def get_logger(name: str = __name__) -> structlog.BoundLogger:
     """Get a structured logger instance.
 
     Args:
@@ -120,7 +120,7 @@ def get_logger(name: str = __name__):
 
         # Wrap with structlog - this will use the global structlog config
         # which includes JSONRenderer for INFO level
-        return structlog.wrap_logger(file_logger)
+        return structlog.wrap_logger(file_logger)  # type: ignore[no-any-return]
 
     # Regular logger (stdout only)
-    return structlog.get_logger(name)
+    return structlog.get_logger(name)  # type: ignore[no-any-return]

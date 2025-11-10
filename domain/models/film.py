@@ -18,7 +18,7 @@ Example:
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from sqlmodel import SQLModel, Field
 from enum import Enum
 from sqlalchemy import Column, Enum as SQLEnum, TypeDecorator
@@ -55,7 +55,7 @@ class FilmRatingType(TypeDecorator):
     impl = SQLEnum
     cache_ok = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             FilmRating,
             values_callable=lambda x: [e.value for e in FilmRating],
@@ -63,15 +63,15 @@ class FilmRatingType(TypeDecorator):
             create_constraint=False,
         )
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: FilmRating | str | None, dialect: Any) -> str | None:
         """Convert enum to database value."""
         if value is None:
             return None
         if isinstance(value, FilmRating):
             return value.value
-        return value
+        return str(value)
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: str | None, dialect: Any) -> FilmRating | None:
         """Convert database value to enum."""
         if value is None:
             return None

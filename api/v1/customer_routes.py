@@ -37,7 +37,7 @@ async def get_customer_rentals(
     skip: int = 0,
     limit: int = 100,
     service: RentalService = Depends(get_rental_service),
-):
+) -> List[RentalRead]:
     """
     Get all rentals for a specific customer with pagination.
 
@@ -62,7 +62,7 @@ async def create_customer_rental(
     rental_data: RentalCreateRequest,
     service: RentalService = Depends(get_rental_service),
     token: dict = Depends(get_dvd_token_guard()),  # Bearer token required with 'dvd_' prefix
-):
+) -> RentalRead:
     """
     Create a new rental for a customer.
 

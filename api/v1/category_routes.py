@@ -31,7 +31,7 @@ async def get_categories(
     skip: int = 0,
     limit: int = 100,
     service: CategoryService = Depends(get_category_service),
-):
+) -> List[CategoryRead]:
     """
     Get all categories with pagination.
 
@@ -50,7 +50,7 @@ async def get_categories(
 async def get_category(
     category_id: int,
     service: CategoryService = Depends(get_category_service),
-):
+) -> CategoryRead:
     """
     Get category by ID.
 

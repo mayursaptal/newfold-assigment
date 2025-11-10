@@ -8,7 +8,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_get_customer_rentals(client: AsyncClient):
+async def test_get_customer_rentals(client: AsyncClient) -> None:
     """Happy-path: Get all rentals for a customer."""
     # Use customer ID 1 (assuming it exists in test DB)
     response = await client.get("/api/v1/customers/1/rentals?skip=0&limit=10")
@@ -18,7 +18,7 @@ async def test_get_customer_rentals(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_create_customer_rental(client: AsyncClient):
+async def test_create_customer_rental(client: AsyncClient) -> None:
     """Happy-path: Create a rental for a customer with Bearer token."""
     rental_data = {"inventory_id": 1, "staff_id": 1}
     headers = {"Authorization": "Bearer dvd_test_token"}

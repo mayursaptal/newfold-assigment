@@ -28,6 +28,7 @@ Example:
 
 from pathlib import Path
 from typing import Dict, List, Optional
+from semantic_kernel.functions import KernelFunction
 from semantic_kernel import Kernel
 from core.logging import get_logger
 
@@ -145,7 +146,7 @@ def register_all_plugins(
     return registered
 
 
-def get_plugin_function(kernel: Kernel, plugin_name: str, function_name: str):
+def get_plugin_function(kernel: Kernel, plugin_name: str, function_name: str) -> KernelFunction | None:
     """
     Get a registered plugin function from the kernel.
 

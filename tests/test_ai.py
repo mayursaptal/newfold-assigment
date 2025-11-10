@@ -7,14 +7,15 @@ AI service methods are mocked to avoid actual API calls.
 import pytest
 from httpx import AsyncClient
 from unittest.mock import patch
+from typing import AsyncGenerator
 
 
 @pytest.mark.asyncio
-async def test_ask_question(client: AsyncClient):
+async def test_ask_question(client: AsyncClient) -> None:
     """Happy-path: Ask a question to the AI and get streaming response."""
     with patch("domain.services.ai_service.AIService.stream_chat") as mock_stream:
 
-        async def mock_stream_generator():
+        async def mock_stream_generator() -> AsyncGenerator[str, None]:
             yield "Hello"
             yield " "
             yield "World"
@@ -27,7 +28,7 @@ async def test_ask_question(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_film_summary(client: AsyncClient):
+async def test_get_film_summary(client: AsyncClient) -> None:
     """Happy-path: Get AI-generated summary for a film."""
     with patch("domain.services.ai_service.AIService.get_film_summary") as mock_summary:
         mock_summary.return_value = {"title": "Test Film", "rating": "PG-13", "recommended": True}
@@ -42,7 +43,7 @@ async def test_get_film_summary(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_handoff_question(client: AsyncClient):
+async def test_handoff_question(client: AsyncClient) -> None:
     """Happy-path: Handoff endpoint routes question to appropriate agent."""
     with patch("domain.services.handoff_service.HandoffService.process_question") as mock_handoff:
 

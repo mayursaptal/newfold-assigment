@@ -8,7 +8,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_film(client: AsyncClient):
+async def test_create_film(client: AsyncClient) -> None:
     """Happy-path: Create a new film."""
     film_data = {
         "title": "Test Film",
@@ -25,7 +25,7 @@ async def test_create_film(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_films(client: AsyncClient):
+async def test_get_films(client: AsyncClient) -> None:
     """Happy-path: Get all films with pagination."""
     response = await client.get("/api/v1/films/?skip=0&limit=10")
     assert response.status_code == 200
@@ -34,7 +34,7 @@ async def test_get_films(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_film_by_id(client: AsyncClient):
+async def test_get_film_by_id(client: AsyncClient) -> None:
     """Happy-path: Get film by ID."""
     # First create a film
     film_data = {"title": "Test Film ID", "language_id": 1, "rental_duration": 3}
@@ -51,7 +51,7 @@ async def test_get_film_by_id(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_film(client: AsyncClient):
+async def test_update_film(client: AsyncClient) -> None:
     """Happy-path: Update a film."""
     # First create a film
     film_data = {"title": "Original Title", "language_id": 1, "rental_duration": 3}
@@ -68,7 +68,7 @@ async def test_update_film(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_delete_film(client: AsyncClient):
+async def test_delete_film(client: AsyncClient) -> None:
     """Happy-path: Delete a film."""
     # First create a film
     film_data = {"title": "Film to Delete", "language_id": 1, "rental_duration": 3}

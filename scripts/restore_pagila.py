@@ -25,7 +25,7 @@ setup_logging()
 logger = get_logger(__name__)
 
 
-async def restore_database():
+async def restore_database() -> None:
     """Restore Pagila database from SQL files.
 
     Connects to PostgreSQL and executes schema and data SQL files
@@ -103,7 +103,7 @@ async def restore_database():
                 for s in data_sql.split("\n")
                 if s.strip() and not s.strip().startswith("--")
             ]
-            current_statement = []
+            current_statement: list[str] = []
             for line in statements:
                 if line.startswith("COPY") or line.startswith(r"\.") or current_statement:
                     current_statement.append(line)

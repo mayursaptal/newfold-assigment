@@ -121,7 +121,7 @@ def create_handoff_orchestration(
                 # Try to access as dict/list
                 try:
                     if "items" in first_message:
-                        items = first_message["items"]  # type: ignore
+                        items = first_message["items"]
                 except (TypeError, KeyError):
                     pass
 
@@ -135,11 +135,11 @@ def create_handoff_orchestration(
                         elif hasattr(item, "content") and item.content:
                             content = str(item.content).strip()
                             break
-                        elif isinstance(item, dict) and "text" in item:
-                            content = str(item["text"]).strip()
+                        elif isinstance(item, dict) and "text" in item:  # type: ignore[unreachable]
+                            content = str(item["text"]).strip()  # type: ignore[unreachable]
                             break
-                        elif isinstance(item, dict) and "content" in item:
-                            content = str(item["content"]).strip()
+                        elif isinstance(item, dict) and "content" in item:  # type: ignore[unreachable]
+                            content = str(item["content"]).strip()  # type: ignore[unreachable]
                             break
                 except (TypeError, AttributeError):
                     pass

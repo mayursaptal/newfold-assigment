@@ -182,4 +182,4 @@ def create_access_token(data: dict) -> str:
         })
         ```
     """
-    return jwt.encode(data, settings.secret_key, algorithm="HS256")
+    return jwt.encode(data, settings.secret_key, algorithm="HS256")  # type: ignore[no-any-return]

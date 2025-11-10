@@ -16,7 +16,7 @@ Example:
     ```
 """
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Callable
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from semantic_kernel import Kernel
@@ -184,7 +184,7 @@ def get_handoff_service(
 
 
 # Authentication dependencies
-def get_dvd_token_guard():
+def get_dvd_token_guard() -> Callable:
     """
     Get DVD token guard dependency.
 
@@ -207,7 +207,7 @@ def get_dvd_token_guard():
     return verify_dvd_token
 
 
-def get_user_guard():
+def get_user_guard() -> Callable:
     """
     Get current user guard dependency.
 

@@ -8,7 +8,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_rental(client: AsyncClient):
+async def test_create_rental(client: AsyncClient) -> None:
     """Happy-path: Create a new rental."""
     rental_data = {"inventory_id": 1, "customer_id": 1, "staff_id": 1}
     response = await client.post("/api/v1/rentals/", json=rental_data)
@@ -19,7 +19,7 @@ async def test_create_rental(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_rentals(client: AsyncClient):
+async def test_get_rentals(client: AsyncClient) -> None:
     """Happy-path: Get all rentals with pagination."""
     response = await client.get("/api/v1/rentals/?skip=0&limit=10")
     assert response.status_code == 200
@@ -28,7 +28,7 @@ async def test_get_rentals(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_rental_by_id(client: AsyncClient):
+async def test_get_rental_by_id(client: AsyncClient) -> None:
     """Happy-path: Get rental by ID."""
     # First create a rental
     rental_data = {"inventory_id": 1, "customer_id": 1, "staff_id": 1}
@@ -44,7 +44,7 @@ async def test_get_rental_by_id(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_rental(client: AsyncClient):
+async def test_update_rental(client: AsyncClient) -> None:
     """Happy-path: Update a rental."""
     # First create a rental
     rental_data = {"inventory_id": 1, "customer_id": 1, "staff_id": 1}
@@ -61,7 +61,7 @@ async def test_update_rental(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_delete_rental(client: AsyncClient):
+async def test_delete_rental(client: AsyncClient) -> None:
     """Happy-path: Delete a rental."""
     # First create a rental
     rental_data = {"inventory_id": 1, "customer_id": 1, "staff_id": 1}

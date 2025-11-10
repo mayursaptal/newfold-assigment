@@ -5,10 +5,11 @@ This module contains one happy-path test per category endpoint.
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_get_categories(client: AsyncClient):
+async def test_get_categories(client: AsyncClient) -> None:
     """Happy-path: Get all categories with pagination."""
     response = await client.get("/api/v1/categories?skip=0&limit=10")
     assert response.status_code == 200
@@ -17,7 +18,7 @@ async def test_get_categories(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_category_by_id(client: AsyncClient, db_session):
+async def test_get_category_by_id(client: AsyncClient, db_session: AsyncSession) -> None:
     """Happy-path: Get category by ID."""
     # Create a category directly in the database for testing
     from domain.models.category import Category

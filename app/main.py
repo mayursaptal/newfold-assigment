@@ -19,6 +19,7 @@ Example:
 """
 
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.settings import settings
@@ -32,7 +33,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application lifespan events.
 
@@ -73,7 +74,7 @@ app.include_router(v1_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint.
 
     Returns basic API information and links to documentation.
@@ -89,7 +90,7 @@ async def root():
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     """Health check endpoint.
 
     Used for monitoring and load balancer health checks.

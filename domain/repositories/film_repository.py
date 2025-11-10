@@ -320,7 +320,7 @@ class FilmRepository:
         stmt: Delete = delete(Film).where(Film.id == film_id)  # type: ignore[arg-type]
         result = await self.session.execute(stmt)
         await self.session.commit()
-        return result.rowcount > 0  # type: ignore[attr-defined]
+        return bool(result.rowcount and result.rowcount > 0)  # type: ignore[attr-defined]
 
     async def search_by_title_with_category(self, title: str) -> Optional[dict]:
         """

@@ -21,6 +21,7 @@ Example:
 """
 
 from fastapi import APIRouter, Depends, Query
+from typing import AsyncGenerator
 from fastapi.responses import StreamingResponse
 from domain.services import AIService, FilmService, HandoffService
 from domain.schemas import FilmSummaryRequest, FilmSummaryResponse, HandoffRequest, HandoffResponse
@@ -33,7 +34,7 @@ router = APIRouter()
 async def ask_question(
     question: str = Query(..., description="Question to ask the AI"),
     service: AIService = Depends(get_ai_service),
-):
+) -> StreamingResponse:
     """
     Ask a question to the AI and get a streaming text response.
 
@@ -45,7 +46,7 @@ async def ask_question(
         Streaming plain text response
     """
 
-    async def generate_stream():
+    async def generate_stream() -> AsyncGenerator[str, None]:
         async for chunk in service.stream_chat(question):
             yield chunk
 
@@ -61,7 +62,7 @@ async def get_film_summary(
     request: FilmSummaryRequest,
     ai_service: AIService = Depends(get_ai_service),
     film_service: FilmService = Depends(get_film_service),
-):
+) -> FilmSummaryResponse:
     """
     Get AI-generated summary for a film with structured JSON response.
 
@@ -83,7 +84,7 @@ async def get_film_summary(
 async def handoff_question(
     request: HandoffRequest,
     service: HandoffService = Depends(get_handoff_service),
-):
+) -> HandoffResponse:
     """
     Route question to appropriate agent using handoff orchestration.
 
