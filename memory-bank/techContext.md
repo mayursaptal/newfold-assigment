@@ -50,6 +50,7 @@
 - **ruff** (0.1.6+) - Fast linter and import sorter
 - **mypy** (1.7.0+) - Type checker
 - **pre-commit** (3.6.0+) - Git hooks for code quality
+- **debugpy** (1.8.0+) - Python debugger for remote debugging
 
 ## Development Setup
 
@@ -77,8 +78,19 @@ alembic upgrade head
 ```
 
 ### Running
+
+**Normal Mode:**
 ```bash
 uvicorn app.main:app --reload
+```
+
+**Docker with Debug Mode:**
+```bash
+# Debug mode (no wait)
+DEBUG_MODE=true DEBUG_WAIT=false docker-compose -f docker/docker-compose.yml up --build
+
+# Debug mode (wait for debugger)
+DEBUG_MODE=true DEBUG_WAIT=true docker-compose -f docker/docker-compose.yml up --build
 ```
 
 ## Configuration Files
@@ -87,6 +99,25 @@ uvicorn app.main:app --reload
 - `.env` - Environment variables (not in git)
 - `.env.example` - Environment variable template
 - `alembic.ini` - Alembic configuration
+
+## Docker Debug Configuration
+
+### Smart Entrypoint
+- `docker/entrypoint.sh` - Smart entrypoint script that detects debug mode
+- Environment variable driven debug behavior
+- Automatic debugpy setup when `DEBUG_MODE=true`
+
+### Debug Environment Variables
+- `DEBUG_MODE` - Enable/disable debug mode (default: false)
+- `DEBUG_WAIT` - Wait for debugger attachment (default: false)  
+- `DEBUG_PORT` - Debug server port (default: 5678)
+- `APP_PORT` - FastAPI application port (default: 8000)
+
+### IDE Integration
+- `.cursor/launch.json` - Cursor debug configurations
+- `.cursor/tasks.json` - Cursor tasks for container management
+- `.vscode/launch.json` - VS Code debug configurations
+- `.vscode/tasks.json` - VS Code tasks for container management
 
 ## Database Connection
 
@@ -115,6 +146,8 @@ Required in `.env`:
 - Agent orchestration requires proper callback and response handling
 - Response extraction must handle multiple message formats from Semantic Kernel
 - Timeout handling required for orchestration operations (default: 30 seconds)
+- debugpy required in dev dependencies for Docker debugging
+- Docker containers must be started with appropriate environment variables for debug mode
 
 ## Semantic Kernel Plugin Structure
 

@@ -15,13 +15,14 @@ The project now implements a fully functional AI agent orchestration system usin
 
 ## Recent Changes
 
-### Cursor IDE Debugging Support
-- ✅ Added Cursor-specific debug configurations (.cursor/launch.json, .cursor/tasks.json)
-- ✅ Created debug initialization script (debug_init.py) with multiple debugging modes
-- ✅ Enhanced Docker setup with debugpy support and debug-specific compose file
-- ✅ Added Cursor IDE settings for optimal Python development experience
-- ✅ Updated documentation with Cursor-specific debugging instructions
-- ✅ Configured remote debugging support for Docker containers
+### Streamlined Docker Debug Configuration
+- ✅ Implemented smart Docker entrypoint with environment-driven debug mode
+- ✅ Removed complex debug shell scripts and separate compose files
+- ✅ Added debugpy to dev dependencies for proper debug support
+- ✅ Updated Cursor and VS Code launch configurations for direct connection
+- ✅ Simplified tasks to use environment variables instead of scripts
+- ✅ Created unified debug workflow for both Cursor and VS Code
+- ✅ Enhanced Docker setup with automatic debug mode detection
 
 ### Comprehensive Documentation Update
 - ✅ Added comprehensive docstrings to all Python modules
@@ -124,42 +125,45 @@ The project now implements a fully functional AI agent orchestration system usin
    - Copy from `.env.example`
    - Update with actual values (especially `OPENAI_API_KEY` for AI features)
 
-2. **Start PostgreSQL** (Docker/Podman)
+2. **Start Application** (Choose one method)
+   
+   **Option A: Normal Mode**
    ```bash
    cd docker
    docker-compose up -d
-   # OR for Podman:
-   podman-compose up -d
+   ```
+   
+   **Option B: Debug Mode (No Wait)**
+   ```bash
+   DEBUG_MODE=true DEBUG_WAIT=false docker-compose -f docker/docker-compose.yml up --build
+   ```
+   
+   **Option C: Debug Mode (Wait for Debugger)**
+   ```bash
+   DEBUG_MODE=true DEBUG_WAIT=true docker-compose -f docker/docker-compose.yml up --build
    ```
 
-3. **Run Initial Migration**
+3. **Run Initial Migration** (if needed)
    ```bash
    alembic upgrade head
    ```
 
-4. **Install Dependencies**
+4. **Test Application**
    ```bash
-   pip install -e ".[dev]"
+   curl -s http://localhost:8000/health
    ```
 
-5. **Run Application**
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-6. **Test Handoff Endpoint**
+5. **Test AI Endpoints**
    ```bash
    curl -X POST "http://localhost:8000/api/v1/ai/handoff" \
      -H "Content-Type: application/json" \
      -d '{"question": "tell me about Inception"}'
    ```
 
-7. **Test General Questions**
-   ```bash
-   curl -X POST "http://localhost:8000/api/v1/ai/handoff" \
-     -H "Content-Type: application/json" \
-     -d '{"question": "What is artificial intelligence?"}'
-   ```
+### Debug Workflow
+1. **Start containers** with debug mode using environment variables
+2. **Connect debugger** using Cursor or VS Code launch configurations
+3. **Set breakpoints** and debug normally
 
 ### Future Enhancements
 - Fine-tune handoff behavior between agents
