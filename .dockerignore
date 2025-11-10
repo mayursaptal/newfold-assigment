@@ -1,0 +1,46 @@
+# Ignore files that don't need to be in the Docker build context
+.git
+.gitignore
+.pytest_cache
+.mypy_cache
+.ruff_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation (keep README.md for Poetry)
+docs/
+# *.md  # Commented out to allow README.md for Poetry
+
+# Test files (we install them via Poetry anyway)
+tests/
+
+# Memory bank (not needed in container)
+memory-bank/
+
+# HTML files
+*.html
+
+# Ignore the minimal dockerfile we just deleted
+docker/Dockerfile.minimal

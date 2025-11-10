@@ -162,7 +162,25 @@ The project now has a complete, production-ready AI agent orchestration system:
 - Callback system tracks responses but requires careful state management
 - Multiple fallback mechanisms for response extraction
 
+## Recent Fixes (November 2025)
+
+### Semantic Kernel Version Update ✅
+- **Issue**: `ModuleNotFoundError: No module named 'semantic_kernel.agents'` preventing container startup
+- **Root Cause**: Using semantic-kernel 0.9.1b1 which didn't have the agents module
+- **Solution**: 
+  - Updated semantic-kernel from 0.9.1b1 to ^1.27.0 (agents module introduced in 1.27)
+  - Updated Pydantic from 2.5.0 to ^2.10.0 (required for semantic-kernel 1.27+)
+  - Regenerated poetry.lock file
+  - Rebuilt Docker containers
+- **Result**: All import errors resolved, AI agents working perfectly with OpenAI integration
+
+### Container Status ✅
+- PostgreSQL container: Running and healthy
+- FastAPI container: Running successfully on port 8000
+- All endpoints operational including AI handoff functionality
+- OpenAPI documentation accessible at http://localhost:8000/docs
+
 ## Blockers
 
-None. Ready to proceed with development.
+None. All major issues resolved. Ready to proceed with development.
 
