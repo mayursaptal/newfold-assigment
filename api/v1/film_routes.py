@@ -135,7 +135,7 @@ async def update_film(
 async def delete_film(
     film_id: int,
     service: FilmService = Depends(get_film_service),
-) -> dict[str, str]:
+) -> None:
     """
     Delete a film.
 
@@ -152,4 +152,4 @@ async def delete_film(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Film with id {film_id} not found",
         )
-    return {"message": "Film deleted successfully"}
+    # No return for 204 status code

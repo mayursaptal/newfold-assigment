@@ -146,7 +146,9 @@ def register_all_plugins(
     return registered
 
 
-def get_plugin_function(kernel: Kernel, plugin_name: str, function_name: str) -> KernelFunction | None:
+def get_plugin_function(
+    kernel: Kernel, plugin_name: str, function_name: str
+) -> KernelFunction | None:
     """
     Get a registered plugin function from the kernel.
 

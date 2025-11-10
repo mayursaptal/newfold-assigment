@@ -129,7 +129,7 @@ async def update_rental(
 async def delete_rental(
     rental_id: int,
     service: RentalService = Depends(get_rental_service),
-) -> dict[str, str]:
+) -> None:
     """
     Delete a rental.
 
@@ -146,4 +146,4 @@ async def delete_rental(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Rental with id {rental_id} not found",
         )
-    return {"message": "Rental deleted successfully"}
+    # No return for 204 status code
