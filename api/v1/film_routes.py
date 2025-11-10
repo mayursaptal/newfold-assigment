@@ -28,6 +28,8 @@ Example:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
+from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
 from domain.schemas import FilmCreate, FilmUpdate, FilmRead
 from domain.services import FilmService
 from core.dependencies import get_film_service
@@ -49,8 +51,40 @@ async def create_film(
 
     Returns:
         Created film
+
+    Raises:
+        HTTPException: 400 if validation fails or database constraint is violated
+        HTTPException: 500 if an unexpected error occurs
     """
-    return await service.create_film(film)
+    try:
+        return await service.create_film(film)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Validation error: {str(e)}"
+        )
+    except IntegrityError as e:
+        # Handle database constraint violations
+        error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+        if "year_check" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Release year must be between 1901 and 2155 (inclusive)",
+            )
+        elif "check constraint" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data validation failed: one or more values violate database constraints",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data integrity error: the provided data violates database constraints",
+            )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while creating the film",
+        )
 
 
 @router.get("/", response_model=List[FilmRead])
@@ -120,15 +154,48 @@ async def update_film(
         Updated film
 
     Raises:
-        HTTPException: If film not found
+        HTTPException: 400 if validation fails or database constraint is violated
+        HTTPException: 404 if film not found
+        HTTPException: 500 if an unexpected error occurs
     """
-    film = await service.update_film(film_id, film_update)
-    if not film:
+    try:
+        film = await service.update_film(film_id, film_update)
+        if not film:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Film with id {film_id} not found",
+            )
+        return film
+    except ValidationError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Film with id {film_id} not found",
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Validation error: {str(e)}"
         )
-    return film
+    except IntegrityError as e:
+        # Handle database constraint violations
+        error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+        if "year_check" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Release year must be between 1901 and 2155 (inclusive)",
+            )
+        elif "check constraint" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data validation failed: one or more values violate database constraints",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data integrity error: the provided data violates database constraints",
+            )
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404) without modification
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while updating the film",
+        )
 
 
 @router.delete("/{film_id}", status_code=status.HTTP_204_NO_CONTENT)

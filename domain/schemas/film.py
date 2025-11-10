@@ -19,7 +19,7 @@ Example:
 from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from domain.models.film import FilmBase, FilmRating
 
 
@@ -45,7 +45,7 @@ class FilmUpdate(SQLModel):
     Attributes:
         title: Updated film title
         description: Updated film description
-        release_year: Updated release year
+        release_year: Updated release year (must be between 1901 and 2155)
         rental_duration: Updated rental duration in days
         rental_rate: Updated rental rate
         length: Updated film length in minutes
@@ -63,6 +63,85 @@ class FilmUpdate(SQLModel):
     replacement_cost: Optional[float] = None
     rating: Optional[FilmRating] = None
     streaming_available: Optional[bool] = None
+
+    @field_validator("release_year")
+    @classmethod
+    def validate_release_year(cls, v: Optional[int]) -> Optional[int]:
+        """Validate release year matches database constraint.
+
+        The database has a year domain constraint that only allows years
+        between 1901 and 2155 (inclusive). This validator ensures the
+        application validates this constraint before attempting database operations.
+
+        Args:
+            v: The release year value to validate
+
+        Returns:
+            The validated release year
+
+        Raises:
+            ValueError: If the year is outside the valid range (1901-2155)
+        """
+        if v is not None:
+            if v < 1901 or v > 2155:
+                raise ValueError(
+                    f"Release year must be between 1901 and 2155 (inclusive). Got: {v}"
+                )
+        return v
+
+    @field_validator("rental_duration")
+    @classmethod
+    def validate_rental_duration(cls, v: Optional[int]) -> Optional[int]:
+        """Validate rental duration is positive.
+
+        Args:
+            v: The rental duration value to validate
+
+        Returns:
+            The validated rental duration
+
+        Raises:
+            ValueError: If the rental duration is not positive
+        """
+        if v is not None and v <= 0:
+            raise ValueError(f"Rental duration must be positive. Got: {v}")
+        return v
+
+    @field_validator("rental_rate", "replacement_cost")
+    @classmethod
+    def validate_positive_amount(cls, v: Optional[float]) -> Optional[float]:
+        """Validate monetary amounts are positive.
+
+        Args:
+            v: The monetary amount to validate
+
+        Returns:
+            The validated amount
+
+        Raises:
+            ValueError: If the amount is not positive
+        """
+        if v is not None and v <= 0:
+            raise ValueError(f"Amount must be positive. Got: {v}")
+        return v
+
+    @field_validator("length")
+    @classmethod
+    def validate_length(cls, v: Optional[int]) -> Optional[int]:
+        """Validate film length is positive.
+
+        Args:
+            v: The film length value to validate
+
+        Returns:
+            The validated film length
+
+        Raises:
+            ValueError: If the length is not positive
+        """
+        if v is not None and v <= 0:
+            raise ValueError(f"Film length must be positive. Got: {v}")
+        return v
 
 
 class FilmRead(FilmBase):
