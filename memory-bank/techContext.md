@@ -21,15 +21,19 @@
   - `InProcessRuntime` - Agent execution runtime
   - Native function plugins (`@kernel_function`)
   - Prompt-based plugins (from directory structure)
+  - Response callback system for message tracking
+  - Human response function for conversation flow
 - **OpenAI** - AI service provider (configurable via `OPENAI_API_KEY`)
+- **Azure OpenAI** - Alternative AI service provider (configurable)
 
 ### Configuration
 - **Pydantic Settings** (2.1.0+) - Settings management
 - **python-dotenv** (1.0.0+) - Environment variable loading
+- **python-multipart** (0.0.6+) - Form data parsing support
 
 ### Authentication
-- **python-jose** (3.3.0+) - JWT handling
-- **passlib** (1.7.4+) - Password hashing
+- **python-jose[cryptography]** (3.3.0+) - JWT handling with cryptographic support
+- **passlib[bcrypt]** (1.7.4+) - Password hashing with bcrypt support
 
 ### Logging
 - **structlog** (23.2.0+) - Structured logging
@@ -37,12 +41,15 @@
 ### Testing
 - **pytest** (7.4.3+) - Testing framework
 - **pytest-asyncio** (0.21.1+) - Async test support
+- **pytest-cov** (4.1.0+) - Test coverage reporting
 - **httpx** (0.25.0+) - Async HTTP client for testing
+- **aiosqlite** (0.19.0+) - In-memory SQLite for tests
 
 ### Development Tools
-- **black** - Code formatter
-- **ruff** - Fast linter
-- **mypy** - Type checker
+- **black** (23.11.0+) - Code formatter
+- **ruff** (0.1.6+) - Fast linter and import sorter
+- **mypy** (1.7.0+) - Type checker
+- **pre-commit** (3.6.0+) - Git hooks for code quality
 
 ## Development Setup
 
@@ -105,6 +112,9 @@ Required in `.env`:
 - Semantic Kernel plugins must follow expected directory structure
 - Native function plugins must be registered before agent creation
 - OpenAI API key required for AI agent functionality
+- Agent orchestration requires proper callback and response handling
+- Response extraction must handle multiple message formats from Semantic Kernel
+- Timeout handling required for orchestration operations (default: 30 seconds)
 
 ## Semantic Kernel Plugin Structure
 

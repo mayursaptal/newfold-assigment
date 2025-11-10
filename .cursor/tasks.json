@@ -1,0 +1,105 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "docker-up-normal",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": [
+                "-f", "docker/docker-compose.yml",
+                "up", "--build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "Start Docker containers in normal mode"
+        },
+        {
+            "label": "docker-up-debug",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": [
+                "-f", "docker/docker-compose.yml",
+                "up", "--build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "DEBUG_MODE": "true",
+                    "DEBUG_WAIT": "false"
+                }
+            },
+            "problemMatcher": [],
+            "detail": "Start Docker containers with debug mode enabled (no wait)"
+        },
+        {
+            "label": "docker-up-debug-wait",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": [
+                "-f", "docker/docker-compose.yml",
+                "up", "--build"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "DEBUG_MODE": "true",
+                    "DEBUG_WAIT": "true"
+                }
+            },
+            "problemMatcher": [],
+            "detail": "Start Docker containers with debug mode enabled (wait for debugger)"
+        },
+        {
+            "label": "docker-down",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": [
+                "-f", "docker/docker-compose.yml",
+                "down"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "Stop and remove Docker containers"
+        }
+    ]
+}

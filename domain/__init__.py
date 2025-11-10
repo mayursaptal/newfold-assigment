@@ -1,49 +1,32 @@
-"""Domain module package.
+"""Domain layer package.
 
-This package contains the domain layer with models, schemas, repositories,
-and services. It provides a clean interface for business logic and data
-access, independent of the API layer.
+This package contains the domain layer of the Interview API, implementing
+the business logic and data models following Domain-Driven Design principles.
 
-The domain layer follows the repository pattern and service layer pattern
-for separation of concerns. All domain logic is infrastructure-agnostic.
+The domain layer is organized into:
+    - models/: SQLModel entities representing database tables
+    - repositories/: Data access layer implementing repository pattern
+    - services/: Business logic layer orchestrating operations
+    - schemas/: Pydantic schemas for API request/response validation
 
-Exports:
-    Models: Film, Rental, Category and their base classes
-    Schemas: Pydantic schemas for API validation
-    Repositories: Data access layer
-    Services: Business logic layer
+Architecture:
+    API Layer → Services → Repositories → Database
+    
+Key Features:
+    - Type-safe models using SQLModel
+    - Repository pattern for data access abstraction
+    - Service layer for business logic encapsulation
+    - Pydantic schemas for API validation
+    - Async/await throughout for performance
+
+Example:
+    ```python
+    from domain.services import FilmService
+    from domain.repositories import FilmRepository
+    from domain.schemas import FilmCreate
+    
+    # Service orchestrates business logic
+    service = FilmService(repository)
+    film = await service.create_film(FilmCreate(...))
+    ```
 """
-
-# Re-export for backward compatibility
-from domain.models import Film, FilmBase, FilmRating, Rental, RentalBase, Category, CategoryBase
-from domain.schemas import FilmCreate, FilmUpdate, FilmRead, RentalCreate, RentalUpdate, RentalRead, CategoryRead
-from domain.repositories import FilmRepository, RentalRepository, CategoryRepository
-from domain.services import FilmService, RentalService, CategoryService, AIService
-
-__all__ = [
-    # Models
-    "Film",
-    "FilmBase",
-    "FilmRating",
-    "Rental",
-    "RentalBase",
-    "Category",
-    "CategoryBase",
-    # Schemas
-    "FilmCreate",
-    "FilmUpdate",
-    "FilmRead",
-    "RentalCreate",
-    "RentalUpdate",
-    "RentalRead",
-    "CategoryRead",
-    # Repositories
-    "FilmRepository",
-    "RentalRepository",
-    "CategoryRepository",
-    # Services
-    "FilmService",
-    "RentalService",
-    "CategoryService",
-    "AIService",
-]

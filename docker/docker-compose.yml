@@ -1,4 +1,4 @@
-version: '3.8'
+# Remove version as it's obsolete in newer Docker Compose
 
 services:
   postgres:
@@ -25,7 +25,6 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     container_name: interview_fastapi
     environment:
       # Database configuration
@@ -49,6 +48,11 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
       OPENAI_ORG_ID: ${OPENAI_ORG_ID:-}
+      # Debug configuration - controlled by entrypoint script
+      DEBUG_MODE: ${DEBUG_MODE:-false}
+      DEBUG_PORT: ${DEBUG_PORT:-5678}
+      DEBUG_WAIT: ${DEBUG_WAIT:-false}
+      APP_PORT: ${APP_PORT:-8000}
       # SECRETS - These should be injected via environment variables in production
       # Never commit actual secrets to version control
       # Example: docker-compose run -e SECRET_KEY=actual-secret fastapi
@@ -57,6 +61,8 @@ services:
       - ../.env
     ports:
       - "8000:8000"
+      # Debug port for debugpy (only exposed when using debug command)
+      - "5678:5678"
     depends_on:
       postgres:
         condition: service_healthy

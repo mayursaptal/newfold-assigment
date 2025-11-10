@@ -11,15 +11,21 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements
 COPY pyproject.toml ./
 
-# Install Python dependencies
+# Install Python dependencies (includes debugpy in dev extras)
 RUN pip install --no-cache-dir -e ".[dev]"
 
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 8000
+# Copy and set up entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose ports
+EXPOSE 8000
+# Expose debugger port for remote debugging
+EXPOSE 5678
+
+# Use the smart entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
 

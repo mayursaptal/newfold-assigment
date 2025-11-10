@@ -224,6 +224,72 @@ pytest tests/ -v --tb=short
 - No external dependencies required for tests
 - AI endpoints are mocked to avoid actual API calls
 
+## Debugging
+
+### Cursor IDE Debugging
+
+The project includes comprehensive debugging support specifically configured for Cursor IDE.
+
+#### Quick Start with Cursor
+
+1. **Initialize debugger (Docker):**
+```bash
+python debug_init.py --docker
+```
+
+2. **In Cursor:**
+   - Open Command Palette (Cmd/Ctrl+Shift+P)
+   - Type "Debug: Start Debugging"
+   - Select "Debug FastAPI in Docker (Cursor)"
+
+#### Debug Initialization Script
+
+The `debug_init.py` script provides easy debugging setup:
+
+```bash
+# Docker debugging (waits for debugger)
+python debug_init.py --docker
+
+# Docker debugging (no wait)
+python debug_init.py --docker --no-wait
+
+# Local debugging (requires local PostgreSQL)
+python debug_init.py --local
+
+# Just start debugpy server
+python debug_init.py --server-only
+```
+
+#### Cursor Debug Configurations
+
+**Available configurations in `.cursor/launch.json`:**
+- `Debug FastAPI in Docker (Cursor)` - Docker debugging with wait
+- `Debug FastAPI in Docker (No Wait - Cursor)` - Docker debugging without wait
+- `Debug FastAPI Locally (Cursor)` - Local debugging
+
+#### Manual Setup
+
+1. **Start containers with debugging:**
+```bash
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.debug.yml up --build
+```
+
+2. **Connect Cursor debugger:**
+   - Host: `localhost`
+   - Port: `5678`
+   - Protocol: `debugpy`
+
+3. **Set breakpoints** and debug normally
+
+#### Environment Variables
+
+```bash
+# Debug configuration
+DEBUG_WAIT=true          # Wait for debugger (default: true)
+DEBUG_PORT=5678          # Debug port (default: 5678)
+APP_PORT=8000           # App port (default: 8000)
+```
+
 ## Database Restore
 
 ### Automatic Restoration (Recommended - Docker/Podman)

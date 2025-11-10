@@ -270,12 +270,28 @@ def create_handoff_orchestration(session: AsyncSession, kernel: Kernel):
 **Usage in API**:
 ```python
 @router.post("/handoff")
-async def handoff_question(request: HandoffRequest, ...):
-    orchestration, tracker = create_handoff_orchestration(session, kernel)
+async def handoff_question(request: HandoffRequest, service: HandoffService = Depends(get_handoff_service)):
+    result = await service.process_question(request.question)
+    return HandoffResponse(agent=result["agent"], answer=result["answer"])
+```
+
+**Service Layer Implementation**:
+```python
+class HandoffService:
+    async def process_question(self, question: str) -> Dict[str, Any]:
+        orchestration, agent_tracker = create_handoff_orchestration(self.session, self.kernel)
     runtime = InProcessRuntime()
     runtime.start()
-    result = await orchestration.invoke(task=request.question, runtime=runtime)
-    return result
+        
+        try:
+            orchestration_result = await asyncio.wait_for(
+                orchestration.invoke(task=question, runtime=runtime),
+                timeout=30.0
+            )
+            # Extract response from tracker or orchestration result
+            return {"agent": agent_name, "answer": answer}
+        finally:
+            runtime.stop()
 ```
 
 ## Plugin Pattern
@@ -328,4 +344,51 @@ kernel.add_plugin(
 ```
 
 **Location**: `core/plugin_loader.py`
+
+## Response Extraction Pattern
+
+### Agent Response Tracking
+
+The orchestration system uses a sophisticated callback system to track agent responses:
+
+**Key Components**:
+1. **Agent Tracker Dictionary**: Mutable state shared between callbacks
+2. **Response Callback**: Captures agent responses and extracts content
+3. **Human Response Function**: Manages conversation flow and termination
+4. **Service Layer**: Orchestrates the entire process with timeout handling
+
+**Location**: `app/agents/orchestration.py`, `domain/services/handoff_service.py`
+
+**Pattern**:
+```python
+def create_handoff_orchestration(session, kernel):
+    agent_tracker = {
+        "last_agent": "SearchAgent",
+        "response_received": False,
+        "last_agent_response": None,
+        "should_stop": False
+    }
+    
+    def agent_response_callback(message: ChatMessageContent):
+        # Extract content from various message formats
+        content = extract_content(message)
+        if content and not agent_tracker.get("last_agent_response"):
+            agent_tracker["last_agent_response"] = content
+            agent_tracker["response_received"] = True
+    
+    orchestration = HandoffOrchestration(
+        members=[search_agent, llm_agent],
+        handoffs=handoffs,
+        agent_response_callback=agent_response_callback,
+        human_response_function=human_response_function
+    )
+    
+    return orchestration, agent_tracker
+```
+
+**Benefits**:
+- Captures first valid response (prevents duplicate responses)
+- Handles multiple message formats from Semantic Kernel
+- Provides fallback mechanisms for response extraction
+- Tracks conversation state for proper termination
 
