@@ -2,16 +2,84 @@
 
 FastAPI application with SQLModel, Semantic Kernel (OpenAI), Alembic migrations, and PostgreSQL.
 
+**Dependency Management**: This project uses [Poetry](https://python-poetry.org/) for dependency management and packaging.
+
+## Poetry Overview
+
+[Poetry](https://python-poetry.org/) is a modern dependency management and packaging tool for Python that provides:
+
+- **Dependency Resolution**: Automatically resolves and locks dependencies
+- **Virtual Environment Management**: Creates and manages virtual environments automatically
+- **Build System**: Modern build system based on PEP 517/518
+- **Publishing**: Easy publishing to PyPI
+- **Lock File**: `poetry.lock` ensures reproducible builds across environments
+
+### Important Note: Python Version Compatibility
+
+**This project currently requires Python 3.10-3.12** due to semantic-kernel dependency constraints. Python 3.13+ is not yet supported by semantic-kernel. If you're using Python 3.13+, you can either:
+
+1. **Use Docker** (recommended) - the Docker setup handles Python version automatically
+2. **Use pyenv** to install Python 3.12: `pyenv install 3.12.0 && pyenv local 3.12.0`
+3. **Use pip/venv** instead of Poetry (works with current Python version)
+
+### Poetry Installation
+
+```bash
+# Install Poetry (recommended method)
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Or via pip (not recommended for production)
+pip install poetry
+
+# Verify installation
+poetry --version
+```
+
+### Poetry Basic Commands
+
+```bash
+# Install dependencies (creates virtual environment automatically)
+poetry install
+
+# Install only production dependencies
+poetry install --no-dev
+
+# Add a new dependency
+poetry add fastapi
+
+# Add a development dependency
+poetry add --group dev pytest
+
+# Update dependencies
+poetry update
+
+# Show dependency tree
+poetry show --tree
+
+# Activate virtual environment
+poetry shell
+
+# Run commands in virtual environment
+poetry run python app/main.py
+poetry run pytest
+poetry run black .
+
+# Export requirements.txt (for compatibility)
+poetry export -f requirements.txt --output requirements.txt
+```
+
 ## Quick Start
 
 ### Using Docker/Podman (Recommended)
+
+The Docker setup now uses **Poetry** for dependency management, providing faster builds and better dependency resolution.
 
 ```bash
 # 1. Copy environment file
 cp .env.example .env
 # Edit .env with your configuration (especially OPENAI_API_KEY)
 
-# 2. Start services
+# 2. Start services (Poetry handles dependencies automatically)
 cd docker
 docker-compose up -d
 # Or: podman compose up -d
@@ -20,7 +88,46 @@ docker-compose up -d
 # 4. Access API at http://localhost:8000
 ```
 
+**Docker Benefits with Poetry:**
+- ✅ **Python 3.12**: Uses compatible Python version for semantic-kernel
+- ✅ **Faster Builds**: Poetry caching speeds up container builds
+- ✅ **Dependency Locking**: `poetry.lock` ensures reproducible builds
+- ✅ **Better Resolution**: Poetry resolves dependency conflicts automatically
+
 ### Running Locally (Without Docker)
+
+#### Prerequisites
+- **Python 3.10-3.12** (semantic-kernel doesn't support Python 3.13+ yet)
+- [Poetry](https://python-poetry.org/docs/#installation) for dependency management
+- PostgreSQL 15+ (running locally or in Docker)
+
+#### Installation with Poetry
+
+```bash
+# 1. Install Poetry (if not already installed)
+curl -sSL https://install.python-poetry.org | python3 -
+# Or via pip: pip install poetry
+
+# 2. Copy environment file
+cp .env.example .env
+# Edit .env with your configuration
+
+# 3. Install dependencies with Poetry
+poetry install
+
+# 4. Activate Poetry shell
+poetry shell
+# Or run commands with: poetry run <command>
+
+# 5. Set up database (see Database Restore section)
+# 6. Run migrations
+poetry run alembic upgrade head
+
+# 7. Run application
+poetry run uvicorn app.main:app --reload
+```
+
+#### Alternative: Using pip/venv
 
 ```bash
 # 1. Install PostgreSQL locally or use Docker for database only
@@ -93,6 +200,43 @@ podman exec -it interview_fastapi bash
 ```
 
 ### Option 2: Running Locally (Without Docker)
+
+#### Using Poetry (Recommended)
+
+**Prerequisites:**
+- **Python 3.10-3.12** (semantic-kernel doesn't support Python 3.13+ yet)
+- [Poetry](https://python-poetry.org/docs/#installation)
+- PostgreSQL 15+ (running locally or in Docker)
+
+**Steps:**
+
+1. **Install dependencies with Poetry:**
+```bash
+poetry install
+```
+
+2. **Configure environment:**
+```bash
+cp .env.example .env
+# Edit .env with your database and OpenAI configuration
+```
+
+3. **Set up database:**
+   - Ensure PostgreSQL is running
+   - Create database: `createdb interview_db`
+   - Restore Pagila database (see Database Restore section)
+
+4. **Run migrations:**
+```bash
+poetry run alembic upgrade head
+```
+
+5. **Start application:**
+```bash
+poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### Using pip/venv (Alternative)
 
 **Prerequisites:**
 - Python 3.10+
@@ -181,6 +325,41 @@ podman exec interview_fastapi python3 -m pytest /app/tests/ -v --tb=short
 ```
 
 ### Option 2: Running Tests Locally (Without Docker)
+
+#### Using Poetry (Recommended)
+
+**Prerequisites:**
+- Poetry installed and dependencies installed (`poetry install`)
+- Test database configured (uses in-memory SQLite by default)
+
+**Steps:**
+
+1. **Run all tests:**
+```bash
+poetry run pytest tests/ -v
+```
+
+2. **Run specific test file:**
+```bash
+poetry run pytest tests/test_films.py -v
+```
+
+3. **Run specific test:**
+```bash
+poetry run pytest tests/test_films.py::test_create_film -v
+```
+
+4. **Run with coverage:**
+```bash
+poetry run pytest tests/ --cov=. --cov-report=html -v
+```
+
+5. **Run with verbose output:**
+```bash
+poetry run pytest tests/ -v --tb=short
+```
+
+#### Using pip/venv (Alternative)
 
 **Prerequisites:**
 - All dependencies installed (including dev dependencies)
@@ -645,7 +824,24 @@ The following environment variables can be set in a `.env` file or as system env
 
 ### Setup
 
-**Local Development:**
+#### Using Poetry (Recommended)
+
+```bash
+# Install Poetry (if not already installed)
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Install dependencies
+poetry install
+
+# Set up pre-commit hooks (recommended)
+poetry run pre-commit install
+
+# Run application
+poetry run uvicorn app.main:app --reload
+```
+
+#### Using pip/venv (Alternative)
+
 ```bash
 # Install dependencies
 pip install -e ".[dev]"
@@ -657,12 +853,20 @@ pre-commit install
 uvicorn app.main:app --reload
 ```
 
-**Docker Development:**
+#### Docker Development (Uses Poetry)
+
 ```bash
 cd docker
 docker-compose up -d
 # Application runs with auto-reload enabled
+# Poetry manages dependencies automatically
 ```
+
+**Docker Poetry Features:**
+- Dependencies installed via `poetry install --with dev`
+- Lock file ensures consistent environments
+- Faster rebuilds with Poetry caching
+- Python 3.12 for semantic-kernel compatibility
 
 ### Pre-commit Hooks
 
@@ -703,6 +907,34 @@ podman exec interview_fastapi mypy . --config-file mypy.ini
 
 ### Code Quality
 
+#### Using Poetry (Recommended)
+
+**Format code:**
+```bash
+poetry run black .
+```
+
+**Lint code:**
+```bash
+poetry run ruff check .
+poetry run ruff check . --fix  # Auto-fix issues
+```
+
+**Type check:**
+```bash
+poetry run mypy . --config-file mypy.ini
+```
+
+**Run all quality checks:**
+```bash
+poetry run black .
+poetry run ruff check .
+poetry run mypy . --config-file mypy.ini
+poetry run pytest tests/ -v
+```
+
+#### Using pip/venv (Alternative)
+
 **Format code:**
 ```bash
 # Local
@@ -741,7 +973,7 @@ podman exec interview_fastapi mypy /app --config-file mypy.ini
 ```bash
 cd docker
 
-# Start services
+# Start services (Poetry installs dependencies automatically)
 docker-compose up -d
 # Or: podman compose up -d
 
@@ -753,9 +985,13 @@ docker-compose logs -f
 docker-compose down
 # Or: podman compose down
 
-# Rebuild containers
+# Rebuild containers (Poetry cache speeds up builds)
 docker-compose up -d --build
 # Or: podman compose up -d --build
+
+# Run Poetry commands in container
+docker exec interview_fastapi poetry show  # Show installed packages
+docker exec interview_fastapi poetry check  # Validate configuration
 ```
 
 ## Viewing Application Logs
